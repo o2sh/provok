@@ -1,0 +1,8 @@
+[package]
+name = "provok"
+version = "0.1.0"
+authors = ["o2sh <ossama-hjaji@live.fr>"]
+edition = "2018"
+
+[dependencies]
+glium = "0.29.0"
