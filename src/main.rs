@@ -2,39 +2,46 @@
 extern crate glium;
 use failure::Fallible;
 
+use glium::glutin::dpi::LogicalSize;
+use glium::glutin::event::Event;
+use glium::glutin::event::StartCause;
+use glium::glutin::event::WindowEvent;
+use glium::glutin::event_loop::ControlFlow;
+use glium::glutin::event_loop::EventLoop;
+use glium::glutin::window::WindowBuilder;
+use glium::glutin::ContextBuilder;
+use glium::Display;
+use std::time::{Duration, Instant};
+
 mod renderer;
 use renderer::Renderer;
 
 fn main() -> Fallible<()> {
-    #[allow(unused_imports)]
-    use glium::{glutin, Surface};
+    let event_loop = EventLoop::new();
+    let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(405., 720.));
+    let cb = ContextBuilder::new();
+    let display = Display::new(wb, cb, &event_loop)?;
 
-    let event_loop = glutin::event_loop::EventLoop::new();
-    let wb = glutin::window::WindowBuilder::new();
-    let cb = glutin::ContextBuilder::new();
-    let display = glium::Display::new(wb, cb, &event_loop)?;
-
-    let renderer = Renderer::new(&display)?;
+    let renderer = Renderer::new(&display, 405., 720.)?;
     event_loop.run(move |event, _, control_flow| {
         match event {
-            glutin::event::Event::WindowEvent { event, .. } => match event {
-                glutin::event::WindowEvent::CloseRequested => {
-                    *control_flow = glutin::event_loop::ControlFlow::Exit;
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::CloseRequested => {
+                    *control_flow = ControlFlow::Exit;
                     return;
                 }
                 _ => return,
             },
-            glutin::event::Event::NewEvents(cause) => match cause {
-                glutin::event::StartCause::ResumeTimeReached { .. } => (),
-                glutin::event::StartCause::Init => (),
+            Event::NewEvents(cause) => match cause {
+                StartCause::ResumeTimeReached { .. } => (),
+                StartCause::Init => (),
                 _ => return,
             },
             _ => return,
         }
 
-        let next_frame_time =
-            std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
-        *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
+        let next_frame_time = Instant::now() + Duration::from_nanos(16_666_667);
+        *control_flow = ControlFlow::WaitUntil(next_frame_time);
         let mut target = display.draw();
         renderer.paint(&mut target).unwrap();
         target.finish().unwrap();

@@ -14,51 +14,57 @@ pub struct Vertex {
 
 implement_vertex!(Vertex, position);
 
+pub struct RenderMetrics {
+    pub width: f32,
+    pub height: f32,
+}
+
+impl RenderMetrics {
+    pub fn new(width: f32, height: f32) -> Self {
+        Self { width, height }
+    }
+}
+
 pub struct Renderer {
     pub program: glium::Program,
-    pub vertex_buffer: VertexBuffer<Vertex>,
-    pub index_buffer: IndexBuffer<u32>,
+    pub glyph_vertex_buffer: VertexBuffer<Vertex>,
+    pub glyph_index_buffer: IndexBuffer<u32>,
+    pub render_metrics: RenderMetrics,
 }
 
 impl Renderer {
-    pub fn new(display: &Display) -> Fallible<Self> {
+    pub fn new(display: &Display, width: f32, height: f32) -> Fallible<Self> {
+        let render_metrics = RenderMetrics::new(width, height);
         let program = glium::Program::from_source(display, VERTEX_SHADER, FRAGMENT_SHADER, None)?;
-
-        let vertex1 = Vertex { position: [-0.5, -0.5] };
-        let vertex2 = Vertex { position: [0.0, 0.5] };
-        let vertex3 = Vertex { position: [0.5, -0.25] };
-        let shape = vec![vertex1, vertex2, vertex3];
-
-        let vertex_buffer = VertexBuffer::new(display, &shape)?;
-        let index_buffer = IndexBuffer::new(
-            display,
-            glium::index::PrimitiveType::TrianglesList,
-            &[0, 1, 2, 1, 3, 2],
-        )?;
-
-        Ok(Self { program, vertex_buffer, index_buffer })
+        let (glyph_vertex_buffer, glyph_index_buffer) = Self::compute_glyph_vertices()?;
+        Ok(Self { program, glyph_vertex_buffer, glyph_index_buffer, render_metrics })
     }
 
     pub fn paint(&self, frame: &mut glium::Frame) -> Fallible<()> {
         frame.clear_color(0.0, 0.0, 1.0, 1.0);
 
-        let uniforms = uniform! {
-            matrix: [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0f32],
-            ]
-        };
+        let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
+            -(self.render_metrics.width as f32) / 2.0,
+            self.render_metrics.width as f32 / 2.0,
+            self.render_metrics.height as f32 / 2.0,
+            -(self.render_metrics.height as f32) / 2.0,
+            -1.0,
+            1.0,
+        )
+        .to_arrays();
 
         frame.draw(
-            &self.vertex_buffer,
-            &self.index_buffer,
+            &self.glyph_vertex_buffer,
+            &self.glyph_index_buffer,
             &self.program,
-            &uniforms,
+            &uniform! {
+                projection: projection,
+            },
             &Default::default(),
         )?;
 
         Ok(())
     }
+
+    pub fn compute_glyph_vertices() -> Fallible<(VertexBuffer<Vertex>, IndexBuffer<u32>)> {}
 }

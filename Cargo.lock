@@ -315,6 +315,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
+name = "euclid"
+version = "0.22.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "51e5bac4ec41ece6346fd867815a57a221abdf48f4eb931b033789b5b4b6fc70"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "failure"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -763,6 +772,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-traits"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "num_enum"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -882,6 +900,7 @@ dependencies = [
 name = "provok"
 version = "0.1.0"
 dependencies = [
+ "euclid",
  "failure",
  "glium",
 ]
