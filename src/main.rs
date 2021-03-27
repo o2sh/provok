@@ -13,6 +13,9 @@ use glium::glutin::ContextBuilder;
 use glium::Display;
 use std::time::{Duration, Instant};
 
+mod color;
+mod config;
+mod font;
 mod renderer;
 use renderer::Renderer;
 

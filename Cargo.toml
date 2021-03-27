@@ -7,4 +7,20 @@ version = "0.1.0"
 [dependencies]
 euclid = "0.22.2"
 failure = "0.1.8"
+freetype = "0.7.0"
 glium = "0.29.0"
+harfbuzz-sys = "0.5.0"
+lazy_static = "1.4.0"
+log = "0.4.14"
+palette = "0.5.0"
+serde = "1.0.125"
+serde_derive = "1.0.125"
+unicode-segmentation = "1.7.1"
+unicode-width = "0.1.8"
+xi-unicode = "0.3.0"
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+servo-fontconfig = "0.5.1"
+
+[target.'cfg(target_os="macos")'.dependencies]
+font-loader = "0.11.0"
