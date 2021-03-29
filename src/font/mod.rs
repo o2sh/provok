@@ -4,7 +4,6 @@ mod hbwrap;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::Arc;
 
 pub mod ftwrap;
 pub mod locator;
@@ -55,17 +54,17 @@ impl LoadedFont {
     }
 }
 
-pub struct FontConfiguration {
+pub struct FontConfiguration<'a> {
     fonts: RefCell<HashMap<TextStyle, Rc<LoadedFont>>>,
     metrics: RefCell<Option<FontMetrics>>,
     dpi_scale: RefCell<f64>,
     font_scale: RefCell<f64>,
-    config: Arc<Config>,
+    config: &'a Config,
     locator: Box<dyn FontLocator>,
 }
 
-impl FontConfiguration {
-    pub fn new(config: Arc<Config>) -> Self {
+impl<'a> FontConfiguration<'a> {
+    pub fn new(config: &'a Config) -> Self {
         let locator = FontLocatorSelection::get_default().new_locator();
         Self {
             fonts: RefCell::new(HashMap::new()),

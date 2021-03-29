@@ -1,5 +1,6 @@
 use palette::Srgb;
 use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
+use serde_derive::*;
 use std::result::Result;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash)]
@@ -72,5 +73,21 @@ impl<'de> Deserialize<'de> for RgbColor {
         RgbColor::from_named_or_rgb_string(&s)
             .ok_or_else(|| format!("unknown color name: {}", s))
             .map_err(serde::de::Error::custom)
+    }
+}
+
+pub type PaletteIndex = u8;
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
+pub enum ColorAttribute {
+    TrueColorWithPaletteFallback(RgbColor, PaletteIndex),
+    TrueColorWithDefaultFallback(RgbColor),
+    PaletteIndex(PaletteIndex),
+    Default,
+}
+
+impl Default for ColorAttribute {
+    fn default() -> Self {
+        ColorAttribute::Default
     }
 }
