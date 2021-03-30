@@ -1,5 +1,7 @@
 use crate::color::ColorAttribute;
+use serde_derive::{Deserialize, Serialize};
 use smallvec::SmallVec;
+use std::mem;
 use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -83,4 +85,106 @@ pub struct CellAttributes {
     attributes: u16,
     pub foreground: ColorAttribute,
     pub background: ColorAttribute,
+}
+
+macro_rules! bitfield {
+    ($getter:ident, $setter:ident, $bitnum:expr) => {
+        #[inline]
+        pub fn $getter(&self) -> bool {
+            (self.attributes & (1 << $bitnum)) == (1 << $bitnum)
+        }
+
+        #[inline]
+        pub fn $setter(&mut self, value: bool) -> &mut Self {
+            let attr_value = if value { 1 << $bitnum } else { 0 };
+            self.attributes = (self.attributes & !(1 << $bitnum)) | attr_value;
+            self
+        }
+    };
+
+    ($getter:ident, $setter:ident, $bitmask:expr, $bitshift:expr) => {
+        #[inline]
+        pub fn $getter(&self) -> u16 {
+            (self.attributes >> $bitshift) & $bitmask
+        }
+
+        #[inline]
+        pub fn $setter(&mut self, value: u16) -> &mut Self {
+            let clear = !($bitmask << $bitshift);
+            let attr_value = (value & $bitmask) << $bitshift;
+            self.attributes = (self.attributes & clear) | attr_value;
+            self
+        }
+    };
+
+    ($getter:ident, $setter:ident, $enum:ident, $bitmask:expr, $bitshift:expr) => {
+        #[inline]
+        pub fn $getter(&self) -> $enum {
+            unsafe { mem::transmute(((self.attributes >> $bitshift) & $bitmask) as u16) }
+        }
+
+        #[inline]
+        pub fn $setter(&mut self, value: $enum) -> &mut Self {
+            let value = value as u16;
+            let clear = !($bitmask << $bitshift);
+            let attr_value = (value & $bitmask) << $bitshift;
+            self.attributes = (self.attributes & clear) | attr_value;
+            self
+        }
+    };
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[repr(u16)]
+pub enum Intensity {
+    Normal = 0,
+    Bold = 1,
+    Half = 2,
+}
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[repr(u16)]
+pub enum Underline {
+    None = 0,
+    Single = 1,
+    Double = 2,
+}
+
+impl Into<bool> for Underline {
+    fn into(self) -> bool {
+        self != Underline::None
+    }
+}
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[repr(u16)]
+pub enum Blink {
+    None = 0,
+    Slow = 1,
+    Rapid = 2,
+}
+
+impl Into<bool> for Blink {
+    fn into(self) -> bool {
+        self != Blink::None
+    }
+}
+
+impl CellAttributes {
+    bitfield!(intensity, set_intensity, Intensity, 0b11, 0);
+    bitfield!(underline, set_underline, Underline, 0b11, 2);
+    bitfield!(blink, set_blink, Blink, 0b11, 4);
+    bitfield!(italic, set_italic, 6);
+    bitfield!(reverse, set_reverse, 7);
+    bitfield!(strikethrough, set_strikethrough, 8);
+    bitfield!(invisible, set_invisible, 9);
+    bitfield!(wrapped, set_wrapped, 10);
+
+    pub fn set_foreground<C: Into<ColorAttribute>>(&mut self, foreground: C) -> &mut Self {
+        self.foreground = foreground.into();
+        self
+    }
+
+    pub fn set_background<C: Into<ColorAttribute>>(&mut self, background: C) -> &mut Self {
+        self.background = background.into();
+        self
+    }
 }

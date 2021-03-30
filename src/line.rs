@@ -1,4 +1,5 @@
 use crate::cell::{Cell, CellAttributes};
+use crate::cellcluster::CellCluster;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -20,6 +21,23 @@ impl Line {
         }
 
         Line { cells }
+    }
+
+    pub fn visible_cells(&self) -> impl Iterator<Item = (usize, &Cell)> {
+        let mut skip_width = 0;
+        self.cells.iter().enumerate().filter(move |(_idx, cell)| {
+            if skip_width > 0 {
+                skip_width -= 1;
+                false
+            } else {
+                skip_width = cell.width().saturating_sub(1);
+                true
+            }
+        })
+    }
+
+    pub fn cluster(&self) -> Vec<CellCluster> {
+        CellCluster::make_cluster(self.visible_cells())
     }
 }
 

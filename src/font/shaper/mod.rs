@@ -1,5 +1,5 @@
 use crate::font::locator::FontDataHandle;
-use crate::font::PixelLength;
+use crate::utils::PixelLength;
 use failure::{format_err, Error, Fallible};
 use serde_derive::*;
 use std::sync::Mutex;

@@ -1,7 +1,7 @@
 use crate::font::locator::FontDataHandle;
 use crate::font::rasterizer::FontRasterizer;
-use crate::font::PixelLength;
 use crate::font::{ftwrap, RasterizedGlyph};
+use crate::utils::PixelLength;
 use failure::Fallible;
 use freetype::freetype::FT_GlyphSlotRec_;
 use std::cell::RefCell;

@@ -1,3 +1,4 @@
+use crate::cell::CellAttributes;
 use failure::{format_err, Error, Fallible};
 mod hbwrap;
 
@@ -20,9 +21,6 @@ pub use crate::font::shaper::{FallbackIdx, FontMetrics, GlyphInfo};
 use crate::font::shaper::{FontShaper, FontShaperSelection};
 
 use super::config::{Config, TextStyle};
-
-pub struct PixelUnit;
-pub type PixelLength = euclid::Length<f64, PixelUnit>;
 
 pub struct LoadedFont {
     rasterizers: Vec<Box<dyn FontRasterizer>>,
@@ -54,17 +52,17 @@ impl LoadedFont {
     }
 }
 
-pub struct FontConfiguration<'a> {
+pub struct FontConfiguration {
     fonts: RefCell<HashMap<TextStyle, Rc<LoadedFont>>>,
     metrics: RefCell<Option<FontMetrics>>,
     dpi_scale: RefCell<f64>,
     font_scale: RefCell<f64>,
-    config: &'a Config,
+    config: Rc<Config>,
     locator: Box<dyn FontLocator>,
 }
 
-impl<'a> FontConfiguration<'a> {
-    pub fn new(config: &'a Config) -> Self {
+impl FontConfiguration {
+    pub fn new(config: Rc<Config>) -> Self {
         let locator = FontLocatorSelection::get_default().new_locator();
         Self {
             fonts: RefCell::new(HashMap::new()),
@@ -131,5 +129,30 @@ impl<'a> FontConfiguration<'a> {
         *self.metrics.borrow_mut() = Some(metrics);
 
         Ok(metrics)
+    }
+
+    pub fn match_style(&self, attrs: &CellAttributes) -> &TextStyle {
+        macro_rules! attr_match {
+            ($ident:ident, $rule:expr) => {
+                if let Some($ident) = $rule.$ident {
+                    if $ident != attrs.$ident() {
+                        continue;
+                    }
+                }
+            };
+        };
+
+        for rule in &self.config.font_rules {
+            attr_match!(intensity, &rule);
+            attr_match!(underline, &rule);
+            attr_match!(italic, &rule);
+            attr_match!(blink, &rule);
+            attr_match!(reverse, &rule);
+            attr_match!(strikethrough, &rule);
+            attr_match!(invisible, &rule);
+
+            return &rule.font;
+        }
+        &self.config.font
     }
 }

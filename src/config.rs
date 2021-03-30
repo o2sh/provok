@@ -1,3 +1,4 @@
+use crate::cell::{Blink, Intensity, Underline};
 use crate::color::RgbColor;
 use serde_derive::*;
 
@@ -120,36 +121,6 @@ impl TextStyle {
         font.push(FontAttributes { family: "Noto Color Emoji".into(), bold: None, italic: None });
 
         font
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[repr(u16)]
-pub enum Intensity {
-    Normal = 0,
-    Bold = 1,
-    Half = 2,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[repr(u16)]
-pub enum Underline {
-    None = 0,
-    Single = 1,
-    Double = 2,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[repr(u16)]
-pub enum Blink {
-    None = 0,
-    Slow = 1,
-    Rapid = 2,
-}
-
-impl Into<bool> for Blink {
-    fn into(self) -> bool {
-        self != Blink::None
     }
 }
 
