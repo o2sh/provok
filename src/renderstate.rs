@@ -69,7 +69,17 @@ impl RenderState {
     ) -> Fallible<Self> {
         let mut glyph_cache = GlyphCache::new(&display, fontconfig, ATLAS_SIZE)?;
         let util_sprites = UtilSprites::new(&mut glyph_cache, render_metrics)?;
-        let program = glium::Program::from_source(display, VERTEX_SHADER, FRAGMENT_SHADER, None)?;
+        let glyph_source = glium::program::ProgramCreationInput::SourceCode {
+            vertex_shader: VERTEX_SHADER,
+            fragment_shader: FRAGMENT_SHADER,
+            outputs_srgb: true,
+            tessellation_control_shader: None,
+            tessellation_evaluation_shader: None,
+            transform_feedback_varyings: None,
+            uses_point_size: false,
+            geometry_shader: None,
+        };
+        let program = glium::Program::new(display, glyph_source)?;
         let (glyph_vertex_buffer, glyph_index_buffer) =
             Self::compute_glyph_vertices(&render_metrics, display)?;
         Ok(Self { program, glyph_cache, util_sprites, glyph_vertex_buffer, glyph_index_buffer })

@@ -83,7 +83,7 @@ fn paint(
     frame: &mut Frame,
 ) -> Fallible<()> {
     frame.clear_color(0.0, 0.0, 1.0, 1.0);
-    let line = Line::from("ossama");
+    let line = Line::from("hello, world");
     render_text(line, render_state, render_metrics, palette, fontconfig)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
         -(render_metrics.win_size.width as f32) / 2.0,
@@ -94,15 +94,19 @@ fn paint(
         1.0,
     )
     .to_arrays();
+    let tex = render_state.glyph_cache.atlas.texture();
 
+    let draw_params =
+        glium::DrawParameters { blend: glium::Blend::alpha_blending(), ..Default::default() };
     frame.draw(
         &render_state.glyph_vertex_buffer,
         &render_state.glyph_index_buffer,
         &render_state.program,
         &uniform! {
             projection: projection,
+            glyph_tex: &*tex,
         },
-        &Default::default(),
+        &draw_params,
     )?;
 
     Ok(())
@@ -124,12 +128,11 @@ fn render_text(
         .map();
     let cell_clusters = line.cluster();
 
-    let mut last_cell_idx = 0;
     for cluster in cell_clusters {
         let attrs = &cluster.attrs;
         let style = fontconfig.match_style(attrs);
+        let fg_color = palette.resolve_bg(attrs.foreground);
         let bg_color = palette.resolve_bg(attrs.background);
-        let fg_color = palette.resolve_fg(attrs.foreground);
 
         let fg_color = rgbcolor_to_color(fg_color);
         let bg_color = rgbcolor_to_color(bg_color);
@@ -148,14 +151,16 @@ fn render_text(
                 + render_metrics.descender)
                 - (glyph.y_offset + glyph.bearing_y))
                 .get() as f32;
-
+            let underline_tex_rect = render_state
+                .util_sprites
+                .select_sprite(attrs.strikethrough(), attrs.underline())
+                .texture_coords();
             for glyph_idx in 0..info.num_cells as usize {
                 let cell_idx = cell_idx + glyph_idx;
 
                 if cell_idx >= num_cols {
                     break;
                 }
-                last_cell_idx = cell_idx;
 
                 let texture =
                     glyph.texture.as_ref().unwrap_or(&render_state.util_sprites.white_space);
@@ -182,6 +187,7 @@ fn render_text(
                 quad.set_fg_color(fg_color);
                 quad.set_bg_color(bg_color);
                 quad.set_texture(texture_rect);
+                quad.set_underline(underline_tex_rect);
                 quad.set_texture_adjust(left, top, right, bottom);
                 quad.set_has_color(glyph.has_color);
             }

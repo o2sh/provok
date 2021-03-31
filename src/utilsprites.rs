@@ -123,25 +123,14 @@ impl<T: Texture2d> UtilSprites<T> {
         })
     }
 
-    pub fn select_sprite(
-        &self,
-        is_highlited_hyperlink: bool,
-        is_strike_through: bool,
-        underline: Underline,
-    ) -> &Sprite<T> {
-        match (is_highlited_hyperlink, is_strike_through, underline) {
-            (true, false, Underline::None) => &self.single_underline,
-            (true, false, Underline::Single) => &self.double_underline,
-            (true, false, Underline::Double) => &self.single_underline,
-            (true, true, Underline::None) => &self.strike_through,
-            (true, true, Underline::Single) => &self.single_and_strike,
-            (true, true, Underline::Double) => &self.double_and_strike,
-            (false, false, Underline::None) => &self.white_space,
-            (false, false, Underline::Single) => &self.single_underline,
-            (false, false, Underline::Double) => &self.double_underline,
-            (false, true, Underline::None) => &self.strike_through,
-            (false, true, Underline::Single) => &self.single_and_strike,
-            (false, true, Underline::Double) => &self.double_and_strike,
+    pub fn select_sprite(&self, is_strike_through: bool, underline: Underline) -> &Sprite<T> {
+        match (is_strike_through, underline) {
+            (false, Underline::None) => &self.single_underline,
+            (false, Underline::Single) => &self.double_underline,
+            (false, Underline::Double) => &self.single_underline,
+            (true, Underline::None) => &self.strike_through,
+            (true, Underline::Single) => &self.single_and_strike,
+            (true, Underline::Double) => &self.double_and_strike,
         }
     }
 }
