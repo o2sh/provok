@@ -85,6 +85,17 @@ impl RenderState {
         Ok(Self { program, glyph_cache, util_sprites, glyph_vertex_buffer, glyph_index_buffer })
     }
 
+    pub fn recompute_glyph_vertices(
+        &mut self,
+        render_metrics: &RenderMetrics,
+        display: &Display,
+    ) -> Fallible<()> {
+        let (glyph_vertex_buffer, glyph_index_buffer) =
+            Self::compute_glyph_vertices(&render_metrics, display)?;
+        self.glyph_vertex_buffer = glyph_vertex_buffer;
+        self.glyph_index_buffer = glyph_index_buffer;
+        Ok(())
+    }
     pub fn compute_glyph_vertices(
         render_metrics: &RenderMetrics,
         display: &Display,
@@ -95,7 +106,7 @@ impl RenderState {
         let mut indices = Vec::new();
 
         let num_cols = render_metrics.win_size.width as usize / cell_width as usize;
-        let y_pos = 0.;
+        let y_pos = -cell_height;
         for x in 0..num_cols {
             let x_pos = (render_metrics.win_size.width as f32 / -2.0) + (x as f32 * cell_width);
 

@@ -21,7 +21,7 @@ pub struct Config {
 }
 
 fn default_font_size() -> f64 {
-    10.0
+    17.0
 }
 
 fn default_dpi() -> f64 {

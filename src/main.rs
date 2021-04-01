@@ -36,20 +36,23 @@ use color::{rgbcolor_to_color, ColorPalette};
 use config::Config;
 use font::FontConfiguration;
 use line::Line;
-use quad::Quad;
+use quad::{Quad, VERTICES_PER_CELL};
 use renderstate::{RenderMetrics, RenderState};
 use utils::PixelLength;
 
+pub const WORDS: [&str; 5] = ["void", "ボイド", "пустота", "فارغ", "空白"];
+
 fn main() -> Fallible<()> {
     let event_loop = EventLoop::new();
-    let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(405., 720.));
+    let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(720., 405.));
     let cb = ContextBuilder::new();
     let display = Display::new(wb, cb, &event_loop)?;
     let config = Config::default();
     let fontconfig = Rc::new(FontConfiguration::new(Rc::new(config)));
-    let render_metrics = RenderMetrics::new(&fontconfig, 405., 720.);
+    let render_metrics = RenderMetrics::new(&fontconfig, 720., 405.);
     let palette = ColorPalette::default();
     let mut render_state = RenderState::new(&display, &render_metrics, &fontconfig)?;
+    let mut i = 0;
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::WindowEvent { event, .. } => match event {
@@ -67,10 +70,19 @@ fn main() -> Fallible<()> {
             _ => return,
         }
 
-        let next_frame_time = Instant::now() + Duration::from_nanos(16_666_667);
+        let next_frame_time = Instant::now() + Duration::from_millis(500);
         *control_flow = ControlFlow::WaitUntil(next_frame_time);
         let mut target = display.draw();
-        paint(&mut render_state, &render_metrics, &palette, &fontconfig, &mut target).unwrap();
+
+        if i == WORDS.len() - 1 {
+            i = 0;
+        } else {
+            i += 1;
+        }
+
+        paint(&mut render_state, &render_metrics, &palette, &fontconfig, &mut target, WORDS[i])
+            .unwrap();
+        render_state.recompute_glyph_vertices(&render_metrics, &display).unwrap();
         target.finish().unwrap();
     });
 }
@@ -81,9 +93,10 @@ fn paint(
     palette: &ColorPalette,
     fontconfig: &Rc<FontConfiguration>,
     frame: &mut Frame,
+    word: &str,
 ) -> Fallible<()> {
     frame.clear_color(0.0, 0.0, 1.0, 1.0);
-    let line = Line::from("hello, world");
+    let line = Line::from(word);
     render_text(line, render_state, render_metrics, palette, fontconfig)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
         -(render_metrics.win_size.width as f32) / 2.0,
@@ -98,6 +111,7 @@ fn paint(
 
     let draw_params =
         glium::DrawParameters { blend: glium::Blend::alpha_blending(), ..Default::default() };
+
     frame.draw(
         &render_state.glyph_vertex_buffer,
         &render_state.glyph_index_buffer,
@@ -105,6 +119,19 @@ fn paint(
         &uniform! {
             projection: projection,
             glyph_tex: &*tex,
+            bg_and_line_layer: true
+        },
+        &draw_params,
+    )?;
+
+    frame.draw(
+        &render_state.glyph_vertex_buffer,
+        &render_state.glyph_index_buffer,
+        &render_state.program,
+        &uniform! {
+            projection: projection,
+            glyph_tex: &*tex,
+            bg_and_line_layer: false
         },
         &draw_params,
     )?;
@@ -126,12 +153,14 @@ fn render_text(
         .slice_mut(..)
         .ok_or_else(|| failure::err_msg("we're confused about the screen size"))?
         .map();
+
+    let start_pos = ((vertices.len() / VERTICES_PER_CELL) - line.len()) / 2;
     let cell_clusters = line.cluster();
 
     for cluster in cell_clusters {
         let attrs = &cluster.attrs;
         let style = fontconfig.match_style(attrs);
-        let fg_color = palette.resolve_bg(attrs.foreground);
+        let fg_color = palette.resolve_fg(attrs.foreground);
         let bg_color = palette.resolve_bg(attrs.background);
 
         let fg_color = rgbcolor_to_color(fg_color);
@@ -156,7 +185,7 @@ fn render_text(
                 .select_sprite(attrs.strikethrough(), attrs.underline())
                 .texture_coords();
             for glyph_idx in 0..info.num_cells as usize {
-                let cell_idx = cell_idx + glyph_idx;
+                let cell_idx = start_pos + cell_idx + glyph_idx;
 
                 if cell_idx >= num_cols {
                     break;

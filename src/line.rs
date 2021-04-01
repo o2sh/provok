@@ -23,6 +23,10 @@ impl Line {
         Line { cells }
     }
 
+    pub fn len(&self) -> usize {
+        self.cells.len()
+    }
+
     pub fn visible_cells(&self) -> impl Iterator<Item = (usize, &Cell)> {
         let mut skip_width = 0;
         self.cells.iter().enumerate().filter(move |(_idx, cell)| {
