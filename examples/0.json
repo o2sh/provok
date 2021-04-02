@@ -1,0 +1,30 @@
+{
+    "font-size": 12,
+    "words": [
+        {
+            "text": "void",
+            "foreground": "White",
+            "background": "Blue"
+        },
+        {
+            "text": "空白",
+            "foreground": "White",
+            "background": "Red"
+        },
+        {
+            "text": "ボイド",
+            "foreground": "White",
+            "background": "Green"
+        },
+        {
+            "text": "пустота",
+            "foreground": "White",
+            "background": "Yellow"
+        },
+        {
+            "text": "فارغ",
+            "foreground": "White",
+            "background": "Black"
+        }
+    ]
+}

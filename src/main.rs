@@ -4,6 +4,7 @@ extern crate glium;
 #[macro_use]
 extern crate failure;
 
+use clap::{crate_description, crate_name, crate_version, App, AppSettings, Arg};
 use failure::Fallible;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::Event;
@@ -21,9 +22,9 @@ mod bitmaps;
 mod cell;
 mod cellcluster;
 mod color;
-mod config;
 mod font;
 mod glyphcache;
+mod input;
 mod line;
 mod quad;
 mod renderstate;
@@ -33,22 +34,20 @@ mod utilsprites;
 use bitmaps::atlas::SpriteSlice;
 use bitmaps::Texture2d;
 use color::{rgbcolor_to_color, ColorPalette};
-use config::Config;
 use font::FontConfiguration;
+use input::{Input, Word};
 use line::Line;
 use quad::{Quad, VERTICES_PER_CELL};
 use renderstate::{RenderMetrics, RenderState};
 use utils::PixelLength;
 
-pub const WORDS: [&str; 5] = ["void", "ボイド", "пустота", "فارغ", "空白"];
-
-fn main() -> Fallible<()> {
+fn run(input_path: &str) -> Fallible<()> {
     let event_loop = EventLoop::new();
     let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(720., 405.));
     let cb = ContextBuilder::new();
     let display = Display::new(wb, cb, &event_loop)?;
-    let config = Config::default();
-    let fontconfig = Rc::new(FontConfiguration::new(Rc::new(config)));
+    let input = Input::new(input_path)?;
+    let fontconfig = Rc::new(FontConfiguration::new(Rc::new(input.config)));
     let render_metrics = RenderMetrics::new(&fontconfig, 720., 405.);
     let palette = ColorPalette::default();
     let mut render_state = RenderState::new(&display, &render_metrics, &fontconfig)?;
@@ -74,14 +73,21 @@ fn main() -> Fallible<()> {
         *control_flow = ControlFlow::WaitUntil(next_frame_time);
         let mut target = display.draw();
 
-        if i == WORDS.len() - 1 {
+        if i == input.words.len() - 1 {
             i = 0;
         } else {
             i += 1;
         }
 
-        paint(&mut render_state, &render_metrics, &palette, &fontconfig, &mut target, WORDS[i])
-            .unwrap();
+        paint(
+            &mut render_state,
+            &render_metrics,
+            &palette,
+            &fontconfig,
+            &mut target,
+            &input.words[i],
+        )
+        .unwrap();
         render_state.recompute_glyph_vertices(&render_metrics, &display).unwrap();
         target.finish().unwrap();
     });
@@ -93,10 +99,10 @@ fn paint(
     palette: &ColorPalette,
     fontconfig: &Rc<FontConfiguration>,
     frame: &mut Frame,
-    word: &str,
+    word: &Word,
 ) -> Fallible<()> {
     frame.clear_color(0.0, 0.0, 1.0, 1.0);
-    let line = Line::from(word);
+    let line = Line::from(word.text.as_str());
     render_text(line, render_state, render_metrics, palette, fontconfig)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
         -(render_metrics.win_size.width as f32) / 2.0,
@@ -222,5 +228,26 @@ fn render_text(
             }
         }
     }
+    Ok(())
+}
+
+fn main() -> Fallible<()> {
+    let matches = App::new(crate_name!())
+        .version(crate_version!())
+        .about(crate_description!())
+        .setting(AppSettings::ColoredHelp)
+        .setting(AppSettings::DeriveDisplayOrder)
+        .setting(AppSettings::UnifiedHelpMessage)
+        .arg(
+            Arg::with_name("input")
+                .short("i")
+                .long("input")
+                .help("Which input to use.")
+                .takes_value(true),
+        )
+        .get_matches();
+
+    let input_path = matches.value_of("input").ok_or("examples/0.json").unwrap();
+    run(input_path)?;
     Ok(())
 }

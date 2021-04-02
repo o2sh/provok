@@ -20,7 +20,7 @@ use crate::font::rasterizer::{FontRasterizer, FontRasterizerSelection};
 pub use crate::font::shaper::{FallbackIdx, FontMetrics, GlyphInfo};
 use crate::font::shaper::{FontShaper, FontShaperSelection};
 
-use super::config::{Config, TextStyle};
+use super::input::{Config, TextStyle};
 
 pub struct LoadedFont {
     rasterizers: Vec<Box<dyn FontRasterizer>>,
@@ -146,10 +146,6 @@ impl FontConfiguration {
             attr_match!(intensity, &rule);
             attr_match!(underline, &rule);
             attr_match!(italic, &rule);
-            attr_match!(blink, &rule);
-            attr_match!(reverse, &rule);
-            attr_match!(strikethrough, &rule);
-            attr_match!(invisible, &rule);
 
             return &rule.font;
         }

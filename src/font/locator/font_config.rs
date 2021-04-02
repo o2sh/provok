@@ -1,6 +1,6 @@
-use crate::config::FontAttributes;
 use crate::font::fcwrap;
 use crate::font::locator::{FontDataHandle, FontLocator};
+use crate::input::FontAttributes;
 use failure::Fallible;
 use fcwrap::Pattern as FontPattern;
 

@@ -1,7 +1,7 @@
 use crate::bitmaps::atlas::{Atlas, Sprite};
 use crate::bitmaps::{Image, Texture2d};
-use crate::config::TextStyle;
 use crate::font::{FontConfiguration, GlyphInfo};
+use crate::input::TextStyle;
 use crate::utils::PixelLength;
 use euclid::num::Zero;
 use failure::Fallible;

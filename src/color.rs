@@ -1,7 +1,6 @@
 use crate::utils::Operator;
 use palette::{Blend, LinSrgb, LinSrgba, Srgb, Srgba};
 use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
-use serde_derive::*;
 use std::result::Result;
 
 #[derive(Clone)]

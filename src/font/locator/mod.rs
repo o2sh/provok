@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-use crate::config::FontAttributes;
+use crate::input::FontAttributes;
 use failure::{format_err, Error, Fallible};
-use serde_derive::*;
+use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
