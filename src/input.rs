@@ -20,6 +20,7 @@ struct WordJson {
     text: String,
     font_family: Option<String>,
     fg_color: String,
+    bg_color: String,
     bold: Option<bool>,
     italic: Option<bool>,
 }
@@ -36,20 +37,21 @@ pub struct Config {
 
 pub struct Word {
     pub text: String,
-    style: TextStyle,
+    pub style: TextStyle,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TextStyle {
     pub fg_color: RgbColor,
+    pub bg_color: RgbColor,
     pub font_attributes: FontAttributes,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FontAttributes {
-    font_family: String,
-    bold: Option<bool>,
-    italic: Option<bool>,
+    pub font_family: String,
+    pub bold: bool,
+    pub italic: bool,
 }
 
 impl Input {
@@ -62,10 +64,11 @@ impl Input {
                 text: String::from(&word_json.text),
                 style: TextStyle {
                     fg_color: RgbColor::from_named_or_rgb_string(&word_json.fg_color).unwrap(),
+                    bg_color: RgbColor::from_named_or_rgb_string(&word_json.bg_color).unwrap(),
                     font_attributes: FontAttributes {
                         font_family: font_family.into(),
-                        bold: word_json.bold,
-                        italic: word_json.italic,
+                        bold: word_json.bold.unwrap_or(false),
+                        italic: word_json.italic.unwrap_or(false),
                     },
                 },
             })

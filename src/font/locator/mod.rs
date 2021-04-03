@@ -16,7 +16,7 @@ pub enum FontDataHandle {
 }
 
 pub trait FontLocator {
-    fn load_fonts(&self, fonts_selection: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>>;
+    fn load_font(&self, font_attributes: &FontAttributes) -> Fallible<Vec<FontDataHandle>>;
 }
 
 #[derive(Debug, Deserialize, Clone, Copy)]

@@ -1,4 +1,5 @@
 use crate::color::ColorAttribute;
+use crate::input::TextStyle;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::mem;
@@ -141,6 +142,13 @@ pub enum Intensity {
     Bold = 1,
     Half = 2,
 }
+
+impl Into<bool> for Intensity {
+    fn into(self) -> bool {
+        self == Intensity::Bold
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[repr(u16)]
 pub enum Underline {
@@ -154,6 +162,7 @@ impl Into<bool> for Underline {
         self != Underline::None
     }
 }
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[repr(u16)]
 pub enum Blink {
@@ -169,6 +178,19 @@ impl Into<bool> for Blink {
 }
 
 impl CellAttributes {
+    pub fn from_text_style(text_style: &TextStyle) -> Self {
+        let mut attr = CellAttributes::default();
+        if text_style.font_attributes.bold {
+            attr.set_intensity(Intensity::Bold);
+        }
+        if text_style.font_attributes.italic {
+            attr.set_italic(true);
+        }
+
+        attr.set_foreground(ColorAttribute::TrueColorWithDefaultFallback(text_style.fg_color));
+        attr.set_background(ColorAttribute::TrueColorWithDefaultFallback(text_style.bg_color));
+        attr
+    }
     bitfield!(intensity, set_intensity, Intensity, 0b11, 0);
     bitfield!(underline, set_underline, Underline, 0b11, 2);
     bitfield!(blink, set_blink, Blink, 0b11, 4);

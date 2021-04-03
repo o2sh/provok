@@ -20,7 +20,8 @@ use crate::font::rasterizer::{FontRasterizer, FontRasterizerSelection};
 pub use crate::font::shaper::{FallbackIdx, FontMetrics, GlyphInfo};
 use crate::font::shaper::{FontShaper, FontShaperSelection};
 
-use super::input::{Config, TextStyle};
+use crate::color::RgbColor;
+use crate::input::{FontAttributes, Input, TextStyle};
 
 pub struct LoadedFont {
     rasterizers: Vec<Box<dyn FontRasterizer>>,
@@ -57,12 +58,12 @@ pub struct FontConfiguration {
     metrics: RefCell<Option<FontMetrics>>,
     dpi_scale: RefCell<f64>,
     font_scale: RefCell<f64>,
-    config: Rc<Config>,
+    input: Rc<Input>,
     locator: Box<dyn FontLocator>,
 }
 
 impl FontConfiguration {
-    pub fn new(config: Rc<Config>) -> Self {
+    pub fn new(input: Rc<Input>) -> Self {
         let locator = FontLocatorSelection::get_default().new_locator();
         Self {
             fonts: RefCell::new(HashMap::new()),
@@ -70,7 +71,7 @@ impl FontConfiguration {
             metrics: RefCell::new(None),
             font_scale: RefCell::new(1.0),
             dpi_scale: RefCell::new(1.0),
-            config,
+            input,
         }
     }
 
@@ -81,16 +82,15 @@ impl FontConfiguration {
             return Ok(Rc::clone(entry));
         }
 
-        let attributes = style.font_with_fallback();
-        let handles = self.locator.load_fonts(&attributes)?;
+        let handles = self.locator.load_font(&style.font_attributes)?;
         let mut rasterizers = vec![];
         for handle in &handles {
             rasterizers.push(FontRasterizerSelection::get_default().new_rasterizer(&handle)?);
         }
         let shaper = FontShaperSelection::get_default().new_shaper(&handles)?;
 
-        let font_size = self.config.font_size * *self.font_scale.borrow();
-        let dpi = *self.dpi_scale.borrow() as u32 * self.config.dpi as u32;
+        let font_size = self.input.config.font_size * *self.font_scale.borrow();
+        let dpi = *self.dpi_scale.borrow() as u32 * self.input.config.dpi as u32;
         let metrics = shaper.metrics(font_size, dpi)?;
 
         let loaded = Rc::new(LoadedFont { rasterizers, shaper, metrics, font_size, dpi });
@@ -108,7 +108,7 @@ impl FontConfiguration {
     }
 
     pub fn default_font(&self) -> Fallible<Rc<LoadedFont>> {
-        self.resolve_font(&self.config.font)
+        self.resolve_font(&self.input.words[0].style)
     }
 
     pub fn get_font_scale(&self) -> f64 {
@@ -131,24 +131,15 @@ impl FontConfiguration {
         Ok(metrics)
     }
 
-    pub fn match_style(&self, attrs: &CellAttributes) -> &TextStyle {
-        macro_rules! attr_match {
-            ($ident:ident, $rule:expr) => {
-                if let Some($ident) = $rule.$ident {
-                    if $ident != attrs.$ident() {
-                        continue;
-                    }
-                }
-            };
-        };
-
-        for rule in &self.config.font_rules {
-            attr_match!(intensity, &rule);
-            attr_match!(underline, &rule);
-            attr_match!(italic, &rule);
-
-            return &rule.font;
+    pub fn get_style(&self, attrs: &CellAttributes) -> TextStyle {
+        TextStyle {
+            fg_color: RgbColor::default(),
+            bg_color: RgbColor::default(),
+            font_attributes: FontAttributes {
+                font_family: String::from(""),
+                bold: attrs.intensity().into(),
+                italic: attrs.italic(),
+            },
         }
-        &self.config.font
     }
 }

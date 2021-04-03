@@ -33,6 +33,7 @@ mod utilsprites;
 
 use bitmaps::atlas::SpriteSlice;
 use bitmaps::Texture2d;
+use cell::CellAttributes;
 use color::{rgbcolor_to_color, ColorPalette};
 use font::FontConfiguration;
 use input::{Input, Word};
@@ -46,8 +47,8 @@ fn run(input_path: &str) -> Fallible<()> {
     let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(720., 405.));
     let cb = ContextBuilder::new();
     let display = Display::new(wb, cb, &event_loop)?;
-    let input = Input::new(input_path)?;
-    let fontconfig = Rc::new(FontConfiguration::new(Rc::new(input.config)));
+    let input = Rc::new(Input::new(input_path)?);
+    let fontconfig = Rc::new(FontConfiguration::new(Rc::clone(&input)));
     let render_metrics = RenderMetrics::new(&fontconfig, 720., 405.);
     let palette = ColorPalette::default();
     let mut render_state = RenderState::new(&display, &render_metrics, &fontconfig)?;
@@ -102,7 +103,8 @@ fn paint(
     word: &Word,
 ) -> Fallible<()> {
     frame.clear_color(0.0, 0.0, 1.0, 1.0);
-    let line = Line::from(word.text.as_str());
+    let style = CellAttributes::from_text_style(&word.style);
+    let line = Line::from_text(word.text.as_str(), &style);
     render_text(line, render_state, render_metrics, palette, fontconfig)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
         -(render_metrics.win_size.width as f32) / 2.0,
@@ -165,7 +167,7 @@ fn render_text(
 
     for cluster in cell_clusters {
         let attrs = &cluster.attrs;
-        let style = fontconfig.match_style(attrs);
+        let style = fontconfig.get_style(attrs);
         let fg_color = palette.resolve_fg(attrs.foreground);
         let bg_color = palette.resolve_bg(attrs.background);
 
@@ -173,13 +175,13 @@ fn render_text(
         let bg_color = rgbcolor_to_color(bg_color);
 
         let glyph_info = {
-            let font = fontconfig.resolve_font(style)?;
+            let font = fontconfig.resolve_font(&style)?;
             font.shape(&cluster.text)?
         };
 
         for info in &glyph_info {
             let cell_idx = cluster.byte_to_cell_idx[info.cluster as usize];
-            let glyph = render_state.glyph_cache.cached_glyph(info, style)?;
+            let glyph = render_state.glyph_cache.cached_glyph(info, &style)?;
 
             let left = (glyph.x_offset + glyph.bearing_x).get() as f32;
             let top = ((PixelLength::new(render_metrics.cell_size.height as f64)
@@ -247,7 +249,7 @@ fn main() -> Fallible<()> {
         )
         .get_matches();
 
-    let input_path = matches.value_of("input").ok_or("examples/0.json").unwrap();
+    let input_path = matches.value_of("input").unwrap_or("examples/0.json");
     run(input_path)?;
     Ok(())
 }

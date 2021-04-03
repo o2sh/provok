@@ -1,30 +1,34 @@
 {
-    "font-size": 12,
+    "font_size": 30,
+    "dpi": 96,
     "words": [
         {
-            "text": "void",
-            "foreground": "White",
-            "background": "Blue"
+            "text": "Void",
+            "fg_color": "White",
+            "bg_color": "Blue",
+            "bold": true,
+            "italic": true
         },
         {
             "text": "空白",
-            "foreground": "White",
-            "background": "Red"
+            "fg_color": "White",
+            "bg_color": "Red"
         },
         {
             "text": "ボイド",
-            "foreground": "White",
-            "background": "Green"
+            "fg_color": "White",
+            "bg_color": "Green"
         },
         {
             "text": "пустота",
-            "foreground": "White",
-            "background": "Yellow"
+            "fg_color": "White",
+            "bg_color": "Yellow",
+            "italic": true
         },
         {
             "text": "فارغ",
-            "foreground": "White",
-            "background": "Black"
+            "fg_color": "White",
+            "bg_color": "Black"
         }
     ]
 }
