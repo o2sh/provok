@@ -1,34 +1,39 @@
 {
     "font_size": 30,
-    "dpi": 96,
     "words": [
         {
             "text": "Void",
-            "fg_color": "White",
-            "bg_color": "Blue",
+            "canvas_color": "#bd1300",
+            "fg_color": "#ffffff",
+            "bg_color": "#01778c",
             "bold": true,
-            "italic": true
+            "italic": true,
+            "underline": true
         },
         {
             "text": "空白",
-            "fg_color": "White",
-            "bg_color": "Red"
+            "canvas_color": "#911fa1",
+            "fg_color": "#ffffff",
+            "bg_color": "#eb916a"
         },
         {
             "text": "ボイド",
-            "fg_color": "White",
-            "bg_color": "Green"
+            "canvas_color": "#ff2b4b",
+            "fg_color": "#ffffff",
+            "bg_color": "#eb6abd"
         },
         {
             "text": "пустота",
-            "fg_color": "White",
-            "bg_color": "Yellow",
+            "canvas_color": "#2bff6b",
+            "fg_color": "#ffffff",
+            "bg_color": "#fcba03",
             "italic": true
         },
         {
             "text": "فارغ",
-            "fg_color": "White",
-            "bg_color": "Black"
+            "canvas_color": "#8fb0ff",
+            "fg_color": "#ffffff",
+            "bg_color": "#43873b"
         }
     ]
 }

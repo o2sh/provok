@@ -135,6 +135,7 @@ impl FontConfiguration {
         TextStyle {
             fg_color: RgbColor::default(),
             bg_color: RgbColor::default(),
+            underline: false,
             font_attributes: FontAttributes {
                 font_family: String::from(""),
                 bold: attrs.intensity().into(),

@@ -102,7 +102,12 @@ fn paint(
     frame: &mut Frame,
     word: &Word,
 ) -> Fallible<()> {
-    frame.clear_color(0.0, 0.0, 1.0, 1.0);
+    frame.clear_color(
+        word.canvas_color.red as f32 / 255.,
+        word.canvas_color.green as f32 / 255.,
+        word.canvas_color.blue as f32 / 255.,
+        1.0,
+    );
     let style = CellAttributes::from_text_style(&word.style);
     let line = Line::from_text(word.text.as_str(), &style);
     render_text(line, render_state, render_metrics, palette, fontconfig)?;
@@ -212,7 +217,6 @@ fn render_text(
 
                 let pixel_rect = slice.pixel_rect(texture);
                 let texture_rect = texture.texture.to_texture_coords(pixel_rect);
-
                 let left = if glyph_idx == 0 { left } else { 0.0 };
                 let bottom = (pixel_rect.size.height as f32 * glyph.scale as f32) + top
                     - render_metrics.cell_size.height as f32;

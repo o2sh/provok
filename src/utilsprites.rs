@@ -125,9 +125,9 @@ impl<T: Texture2d> UtilSprites<T> {
 
     pub fn select_sprite(&self, is_strike_through: bool, underline: Underline) -> &Sprite<T> {
         match (is_strike_through, underline) {
-            (false, Underline::None) => &self.single_underline,
-            (false, Underline::Single) => &self.double_underline,
-            (false, Underline::Double) => &self.single_underline,
+            (false, Underline::None) => &self.white_space,
+            (false, Underline::Single) => &self.single_underline,
+            (false, Underline::Double) => &self.double_underline,
             (true, Underline::None) => &self.strike_through,
             (true, Underline::Single) => &self.single_and_strike,
             (true, Underline::Double) => &self.double_and_strike,

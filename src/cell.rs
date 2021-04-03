@@ -186,6 +186,9 @@ impl CellAttributes {
         if text_style.font_attributes.italic {
             attr.set_italic(true);
         }
+        if text_style.underline {
+            attr.set_underline(Underline::Single);
+        }
 
         attr.set_foreground(ColorAttribute::TrueColorWithDefaultFallback(text_style.fg_color));
         attr.set_background(ColorAttribute::TrueColorWithDefaultFallback(text_style.bg_color));
