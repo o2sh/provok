@@ -134,10 +134,11 @@ impl FontConfiguration {
     pub fn get_style(&self, attrs: &CellAttributes) -> TextStyle {
         TextStyle {
             fg_color: RgbColor::default(),
-            bg_color: RgbColor::default(),
+            bg_color: None,
             underline: false,
+            strikethrough: false,
             font_attributes: FontAttributes {
-                font_family: String::from(""),
+                font_family: String::from(&attrs.font_family),
                 bold: attrs.intensity().into(),
                 italic: attrs.italic(),
             },

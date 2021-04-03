@@ -1,39 +1,44 @@
 {
-    "font_size": 30,
+    "font_size": 50,
     "words": [
         {
-            "text": "Void",
-            "canvas_color": "#bd1300",
+            "text": "\"VOID\"",
+            "canvas_color": "#ffffff",
             "fg_color": "#ffffff",
-            "bg_color": "#01778c",
-            "bold": true,
-            "italic": true,
-            "underline": true
-        },
-        {
-            "text": "空白",
-            "canvas_color": "#911fa1",
-            "fg_color": "#ffffff",
-            "bg_color": "#eb916a"
-        },
-        {
-            "text": "ボイド",
-            "canvas_color": "#ff2b4b",
-            "fg_color": "#ffffff",
-            "bg_color": "#eb6abd"
-        },
-        {
-            "text": "пустота",
-            "canvas_color": "#2bff6b",
-            "fg_color": "#ffffff",
-            "bg_color": "#fcba03",
-            "italic": true
+            "bg_color": "#000000",
+            "bold": true
         },
         {
             "text": "فارغ",
-            "canvas_color": "#8fb0ff",
-            "fg_color": "#ffffff",
-            "bg_color": "#43873b"
+            "canvas_color": "#65A8EC",
+            "fg_color": "#000000",
+            "bold": true
+        },
+        {
+            "text": "无效的",
+            "canvas_color": "#D53071",
+            "fg_color": "#008165",
+            "bg_color": "#E03427",
+            "bold": true
+        },
+        {
+            "text": "ボイド",
+            "canvas_color": "#006E3F",
+            "fg_color": "#D70B17",
+            "bold": true
+        },
+        {
+            "text": "пустота",
+            "canvas_color": "#E70012",
+            "fg_color": "#000000",
+            "bold": true
+        },
+        {
+            "text": "โมฆะ",
+            "canvas_color": "#E9DE4D",
+            "fg_color": "#000000",
+            "bold": true,
+            "underline": true
         }
     ]
 }

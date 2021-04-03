@@ -86,6 +86,7 @@ pub struct CellAttributes {
     attributes: u16,
     pub foreground: ColorAttribute,
     pub background: ColorAttribute,
+    pub font_family: String,
 }
 
 macro_rules! bitfield {
@@ -190,8 +191,17 @@ impl CellAttributes {
             attr.set_underline(Underline::Single);
         }
 
+        if text_style.strikethrough {
+            attr.set_strikethrough(true);
+        }
+        
+        attr.font_family = String::from(&text_style.font_attributes.font_family);
         attr.set_foreground(ColorAttribute::TrueColorWithDefaultFallback(text_style.fg_color));
-        attr.set_background(ColorAttribute::TrueColorWithDefaultFallback(text_style.bg_color));
+        if let Some(c) = text_style.bg_color {
+            attr.set_background(ColorAttribute::TrueColorWithDefaultFallback(c));
+        } else {
+            attr.set_background(ColorAttribute::Default);
+        }
         attr
     }
     bitfield!(intensity, set_intensity, Intensity, 0b11, 0);

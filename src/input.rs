@@ -20,10 +20,11 @@ struct WordJson {
     canvas_color: String,
     font_family: Option<String>,
     fg_color: String,
-    bg_color: String,
+    bg_color: Option<String>,
     bold: Option<bool>,
     italic: Option<bool>,
     underline: Option<bool>,
+    strikethrough: Option<bool>,
 }
 
 pub struct Input {
@@ -45,8 +46,9 @@ pub struct Word {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TextStyle {
     pub fg_color: RgbColor,
-    pub bg_color: RgbColor,
+    pub bg_color: Option<RgbColor>,
     pub underline: bool,
+    pub strikethrough: bool,
     pub font_attributes: FontAttributes,
 }
 
@@ -63,13 +65,20 @@ impl Input {
         let mut words: Vec<Word> = Vec::new();
         for word_json in input_json.words.iter() {
             let font_family = if let Some(f) = &word_json.font_family { f } else { FONT_FAMILY };
+            let bg_color = if let Some(c) = &word_json.bg_color {
+                Some(RgbColor::from_named_or_rgb_string(c).unwrap())
+            } else {
+                None
+            };
+
             words.push(Word {
                 text: String::from(&word_json.text),
                 canvas_color: RgbColor::from_named_or_rgb_string(&word_json.canvas_color).unwrap(),
                 style: TextStyle {
                     fg_color: RgbColor::from_named_or_rgb_string(&word_json.fg_color).unwrap(),
-                    bg_color: RgbColor::from_named_or_rgb_string(&word_json.bg_color).unwrap(),
+                    bg_color,
                     underline: word_json.underline.unwrap_or(false),
+                    strikethrough: word_json.strikethrough.unwrap_or(false),
                     font_attributes: FontAttributes {
                         font_family: font_family.into(),
                         bold: word_json.bold.unwrap_or(false),

@@ -34,7 +34,7 @@ mod utilsprites;
 use bitmaps::atlas::SpriteSlice;
 use bitmaps::Texture2d;
 use cell::CellAttributes;
-use color::{rgbcolor_to_color, ColorPalette};
+use color::{rgbcolor_to_color, ColorAttribute, ColorPalette};
 use font::FontConfiguration;
 use input::{Input, Word};
 use line::Line;
@@ -174,10 +174,8 @@ fn render_text(
         let attrs = &cluster.attrs;
         let style = fontconfig.get_style(attrs);
         let fg_color = palette.resolve_fg(attrs.foreground);
-        let bg_color = palette.resolve_bg(attrs.background);
 
         let fg_color = rgbcolor_to_color(fg_color);
-        let bg_color = rgbcolor_to_color(bg_color);
 
         let glyph_info = {
             let font = fontconfig.resolve_font(&style)?;
@@ -226,7 +224,11 @@ fn render_text(
                 let mut quad = Quad::for_cell(cell_idx, &mut vertices);
 
                 quad.set_fg_color(fg_color);
-                quad.set_bg_color(bg_color);
+                if attrs.background != ColorAttribute::Default {
+                    let bg_color = palette.resolve_bg(attrs.background);
+                    let bg_color = rgbcolor_to_color(bg_color);
+                    quad.set_bg_color(bg_color);
+                }
                 quad.set_texture(texture_rect);
                 quad.set_underline(underline_tex_rect);
                 quad.set_texture_adjust(left, top, right, bottom);
