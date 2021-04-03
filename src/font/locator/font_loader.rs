@@ -6,17 +6,12 @@ use font_loader::system_fonts;
 pub struct FontLoaderFontLocator {}
 
 impl FontLocator for FontLoaderFontLocator {
-    fn load_font(&self, attr: FontAttributes) -> Fallible<Vec<FontDataHandle>> {
+    fn load_font(&self, attr: &FontAttributes) -> Fallible<Vec<FontDataHandle>> {
         let mut fonts = Vec::new();
         let mut font_props =
-            system_fonts::FontPropertyBuilder::new().family(&font_attr.family).monospace();
-        font_props =
-            if *font_attr.bold.as_ref().unwrap_or(&false) { font_props.bold() } else { font_props };
-        font_props = if *font_attr.italic.as_ref().unwrap_or(&false) {
-            font_props.italic()
-        } else {
-            font_props
-        };
+            system_fonts::FontPropertyBuilder::new().family(&attr.font_family).monospace();
+        font_props = if attr.bold { font_props.bold() } else { font_props };
+        font_props = if attr.italic { font_props.italic() } else { font_props };
         let font_props = font_props.build();
 
         if let Some((data, index)) = system_fonts::get(&font_props) {
