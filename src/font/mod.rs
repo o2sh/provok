@@ -100,19 +100,8 @@ impl FontConfiguration {
         Ok(loaded)
     }
 
-    pub fn change_scaling(&self, font_scale: f64, dpi_scale: f64) {
-        *self.dpi_scale.borrow_mut() = dpi_scale;
-        *self.font_scale.borrow_mut() = font_scale;
-        self.fonts.borrow_mut().clear();
-        self.metrics.borrow_mut().take();
-    }
-
     pub fn default_font(&self) -> Fallible<Rc<LoadedFont>> {
         self.resolve_font(&self.input.words[0].style)
-    }
-
-    pub fn get_font_scale(&self) -> f64 {
-        *self.font_scale.borrow()
     }
 
     pub fn default_font_metrics(&self) -> Result<FontMetrics, Error> {

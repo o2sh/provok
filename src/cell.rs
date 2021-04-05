@@ -194,7 +194,7 @@ impl CellAttributes {
         if text_style.strikethrough {
             attr.set_strikethrough(true);
         }
-        
+
         attr.font_family = String::from(&text_style.font_attributes.font_family);
         attr.set_foreground(ColorAttribute::TrueColorWithDefaultFallback(text_style.fg_color));
         if let Some(c) = text_style.bg_color {
@@ -206,12 +206,8 @@ impl CellAttributes {
     }
     bitfield!(intensity, set_intensity, Intensity, 0b11, 0);
     bitfield!(underline, set_underline, Underline, 0b11, 2);
-    bitfield!(blink, set_blink, Blink, 0b11, 4);
     bitfield!(italic, set_italic, 6);
-    bitfield!(reverse, set_reverse, 7);
     bitfield!(strikethrough, set_strikethrough, 8);
-    bitfield!(invisible, set_invisible, 9);
-    bitfield!(wrapped, set_wrapped, 10);
 
     pub fn set_foreground<C: Into<ColorAttribute>>(&mut self, foreground: C) -> &mut Self {
         self.foreground = foreground.into();
