@@ -2,7 +2,7 @@
 
 ## Input
 
-```json
+```
 {
     "font_size": 50,
     "words": [
