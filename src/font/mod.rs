@@ -1,4 +1,4 @@
-use crate::cell::CellAttributes;
+use crate::cell::{CellAttributes, Intensity};
 use failure::{format_err, Error, Fallible};
 mod hbwrap;
 
@@ -82,7 +82,8 @@ impl FontConfiguration {
             return Ok(Rc::clone(entry));
         }
 
-        let handles = self.locator.load_font(&style.font_attributes)?;
+        let attributes = style.font_with_fallback();
+        let handles = self.locator.load_font(&attributes)?;
         let mut rasterizers = vec![];
         for handle in &handles {
             rasterizers.push(FontRasterizerSelection::get_default().new_rasterizer(&handle)?);
@@ -121,16 +122,20 @@ impl FontConfiguration {
     }
 
     pub fn get_style(&self, attrs: &CellAttributes) -> TextStyle {
-        TextStyle {
+        let fonts = vec![FontAttributes::default()];
+        let mut text_style = TextStyle {
             fg_color: RgbColor::default(),
             bg_color: None,
             underline: false,
             strikethrough: false,
-            font_attributes: FontAttributes {
-                font_family: String::from(&attrs.font_family),
-                bold: attrs.intensity().into(),
-                italic: attrs.italic(),
-            },
+            fonts,
+        };
+        if attrs.italic() {
+            text_style.make_italic();
         }
+        if attrs.intensity() == Intensity::Bold {
+            text_style.make_bold();
+        }
+        text_style
     }
 }

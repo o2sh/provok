@@ -49,12 +49,12 @@ pub struct TextStyle {
     pub bg_color: Option<RgbColor>,
     pub underline: bool,
     pub strikethrough: bool,
-    pub font_attributes: FontAttributes,
+    pub fonts: Vec<FontAttributes>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FontAttributes {
-    pub font_family: String,
+    pub family: String,
     pub bold: bool,
     pub italic: bool,
 }
@@ -79,11 +79,11 @@ impl Input {
                     bg_color,
                     underline: word_json.underline.unwrap_or(false),
                     strikethrough: word_json.strikethrough.unwrap_or(false),
-                    font_attributes: FontAttributes {
-                        font_family: font_family.into(),
+                    fonts: vec![FontAttributes {
+                        family: font_family.into(),
                         bold: word_json.bold.unwrap_or(false),
                         italic: word_json.italic.unwrap_or(false),
-                    },
+                    }],
                 },
             })
         }
@@ -92,6 +92,47 @@ impl Input {
     }
 }
 
+impl Default for FontAttributes {
+    fn default() -> Self {
+        Self { family: FONT_FAMILY.into(), bold: false, italic: false }
+    }
+}
+
+impl TextStyle {
+    pub fn make_bold(&mut self) {
+        for attr in self.fonts.iter_mut() {
+            attr.bold = true;
+        }
+    }
+
+    pub fn make_italic(&mut self) {
+        for attr in self.fonts.iter_mut() {
+            attr.italic = true;
+        }
+    }
+
+    pub fn font_with_fallback(&self) -> Vec<FontAttributes> {
+        let mut font = self.fonts.clone();
+
+        #[cfg(target_os = "macos")]
+        font.push(FontAttributes {
+            family: "Apple Color Emoji".into(),
+            bold: false,
+            italic: false,
+        });
+        #[cfg(target_os = "macos")]
+        font.push(FontAttributes { family: "Apple Symbols".into(), bold: false, italic: false });
+        #[cfg(target_os = "macos")]
+        font.push(FontAttributes { family: "Zapf Dingbats".into(), bold: false, italic: false });
+        #[cfg(target_os = "macos")]
+        font.push(FontAttributes { family: "Apple LiGothic".into(), bold: false, italic: false });
+
+        #[cfg(all(unix, not(target_os = "macos")))]
+        font.push(FontAttributes { family: "Noto Color Emoji".into(), bold: false, italic: false });
+
+        font
+    }
+}
 impl InputJson {
     fn parse(path: &str) -> Fallible<Self> {
         let data = std::fs::read_to_string(path)?;

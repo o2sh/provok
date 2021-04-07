@@ -181,10 +181,10 @@ impl Into<bool> for Blink {
 impl CellAttributes {
     pub fn from_text_style(text_style: &TextStyle) -> Self {
         let mut attr = CellAttributes::default();
-        if text_style.font_attributes.bold {
+        if text_style.fonts[0].bold {
             attr.set_intensity(Intensity::Bold);
         }
-        if text_style.font_attributes.italic {
+        if text_style.fonts[0].italic {
             attr.set_italic(true);
         }
         if text_style.underline {
@@ -195,7 +195,7 @@ impl CellAttributes {
             attr.set_strikethrough(true);
         }
 
-        attr.font_family = String::from(&text_style.font_attributes.font_family);
+        attr.font_family = String::from(&text_style.fonts[0].family);
         attr.set_foreground(ColorAttribute::TrueColorWithDefaultFallback(text_style.fg_color));
         if let Some(c) = text_style.bg_color {
             attr.set_background(ColorAttribute::TrueColorWithDefaultFallback(c));
