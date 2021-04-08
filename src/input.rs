@@ -2,11 +2,7 @@ use crate::color::RgbColor;
 use failure::Fallible;
 use serde::Deserialize;
 
-#[cfg(target_os = "macos")]
-const FONT_FAMILY: &str = "Menlo";
-
-#[cfg(not(target_os = "macos"))]
-const FONT_FAMILY: &str = "monospace";
+const FONT_FAMILY: &str = "JetBrains Mono";
 
 #[derive(Debug, Deserialize, Clone)]
 struct InputJson {
@@ -114,21 +110,11 @@ impl TextStyle {
     pub fn font_with_fallback(&self) -> Vec<FontAttributes> {
         let mut font = self.fonts.clone();
 
-        #[cfg(target_os = "macos")]
-        font.push(FontAttributes {
-            family: "Apple Color Emoji".into(),
-            bold: false,
-            italic: false,
-        });
-        #[cfg(target_os = "macos")]
-        font.push(FontAttributes { family: "Apple Symbols".into(), bold: false, italic: false });
-        #[cfg(target_os = "macos")]
-        font.push(FontAttributes { family: "Zapf Dingbats".into(), bold: false, italic: false });
-        #[cfg(target_os = "macos")]
-        font.push(FontAttributes { family: "Apple LiGothic".into(), bold: false, italic: false });
-
-        #[cfg(all(unix, not(target_os = "macos")))]
         font.push(FontAttributes { family: "Noto Color Emoji".into(), bold: false, italic: false });
+        #[cfg(not(target_os = "macos"))]
+        font.push(FontAttributes { family: "monospace".into(), bold: false, italic: false });
+        #[cfg(target_os = "macos")]
+        font.push(FontAttributes { family: "Menlo".into(), bold: false, italic: false });
 
         font
     }

@@ -35,11 +35,13 @@ pub fn load_fonts(attrs: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>> {
     let mut handles = vec![];
     for attr in attrs {
         for (names, path, handle) in &font_info {
+            println!("font loaded from disk: {}", names.full_name);
             if font_info_matches(attr, &names) {
                 log::warn!("Using {} from {}", names.full_name, path.display(),);
                 handles.push(handle.clone());
                 break;
             }
+            //            println!("{} not found", attr.family);
         }
     }
     Ok(handles)
@@ -68,12 +70,21 @@ fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
 
 fn load_built_in_fonts(font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>) -> Fallible<()> {
     for data in &[
-        include_bytes!("../../assets/fonts/Cairo-Black.ttf") as &'static [u8],
-        include_bytes!("../../assets/fonts/Cairo-Bold.ttf"),
-        include_bytes!("../../assets/fonts/Cairo-ExtraLight.ttf"),
-        include_bytes!("../../assets/fonts/Cairo-Light.ttf"),
-        include_bytes!("../../assets/fonts/Cairo-Regular.ttf"),
-        include_bytes!("../../assets/fonts/Cairo-SemiBold.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-BoldItalic.ttf") as &'static [u8],
+        include_bytes!("../../assets/fonts/JetBrainsMono-Bold.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-ExtraBoldItalic.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-ExtraBold.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-ExtraLightItalic.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-ExtraLight.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-Italic.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-LightItalic.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-Light.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-MediumItalic.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-Medium.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-Regular.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-ThinItalic.ttf"),
+        include_bytes!("../../assets/fonts/JetBrainsMono-Thin.ttf"),
+        include_bytes!("../../assets/fonts/NotoColorEmoji.ttf"),
     ] {
         let scope = ReadScope::new(&data);
         let file = scope.read::<FontData<'_>>()?;
