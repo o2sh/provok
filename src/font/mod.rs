@@ -8,6 +8,7 @@ use std::rc::Rc;
 
 pub mod ftwrap;
 pub mod locator;
+pub mod parser;
 pub mod rasterizer;
 pub mod shaper;
 
@@ -83,7 +84,8 @@ impl FontConfiguration {
         }
 
         let attributes = style.font_with_fallback();
-        let handles = self.locator.load_font(&attributes)?;
+        let mut handles = parser::load_fonts(&attributes)?;
+        handles.append(&mut self.locator.load_fonts(&attributes)?);
         let mut rasterizers = vec![];
         for handle in &handles {
             rasterizers.push(FontRasterizerSelection::get_default().new_rasterizer(&handle)?);

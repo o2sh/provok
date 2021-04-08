@@ -1,6 +1,8 @@
 use crate::font::locator::FontDataHandle;
 use crate::input::FontAttributes;
-use allsorts::tables::{OffsetTable, OpenTypeFile, OpenTypeFont};
+use allsorts::binary::read::ReadScope;
+use allsorts::font_data::FontData;
+use allsorts::tables::{OffsetTable, OpenTypeData};
 use failure::Fallible;
 use std::path::{Path, PathBuf};
 
@@ -20,7 +22,7 @@ impl Names {
     }
 }
 
-pub fn load_fonts(attr: &FontAttributes) -> Fallible<Vec<FontDataHandle>> {
+pub fn load_fonts(attrs: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>> {
     let mut font_info = vec![];
 
     load_built_in_fonts(&mut font_info).ok();
@@ -31,23 +33,25 @@ pub fn load_fonts(attr: &FontAttributes) -> Fallible<Vec<FontDataHandle>> {
     }
 
     let mut handles = vec![];
-    for (names, path, handle) in &font_info {
-        if font_info_matches(attr, &names) {
-            log::warn!("Using {} from {}", names.full_name, path.display(),);
-            handles.push(handle.clone());
-            break;
+    for attr in attrs {
+        for (names, path, handle) in &font_info {
+            if font_info_matches(attr, &names) {
+                log::warn!("Using {} from {}", names.full_name, path.display(),);
+                handles.push(handle.clone());
+                break;
+            }
         }
     }
     Ok(handles)
 }
 
 fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
-    if attr.font_family == names.full_name {
+    if attr.family == names.full_name {
         true
     } else if let Some(fam) = names.family.as_ref() {
         // TODO: correctly match using family and sub-family;
         // this is a pretty rough approximation
-        if attr.font_family == *fam {
+        if attr.family == *fam {
             match names.sub_family.as_ref().map(String::as_str) {
                 Some("Italic") if attr.italic => true,
                 Some("Bold") if attr.bold => true,
@@ -64,59 +68,50 @@ fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
 
 fn load_built_in_fonts(font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>) -> Fallible<()> {
     for data in &[
-        include_bytes!("../../assets/fonts/JetBrainsMono-Bold-Italic.ttf") as &'static [u8],
-        include_bytes!("../../assets/fonts/JetBrainsMono-Bold.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-ExtraBold-Italic.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-ExtraBold.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-ExtraLight-Italic.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-ExtraLight.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-Italic.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-Light-Italic.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-Light.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-Medium-Italic.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-Medium.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-Regular.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-SemiLight-Italic.ttf"),
-        include_bytes!("../../assets/fonts/JetBrainsMono-SemiLight.ttf"),
-        include_bytes!("../../assets/fonts/Cairo-Black.ttf"),
+        include_bytes!("../../assets/fonts/Cairo-Black.ttf") as &'static [u8],
         include_bytes!("../../assets/fonts/Cairo-Bold.ttf"),
         include_bytes!("../../assets/fonts/Cairo-ExtraLight.ttf"),
         include_bytes!("../../assets/fonts/Cairo-Light.ttf"),
         include_bytes!("../../assets/fonts/Cairo-Regular.ttf"),
         include_bytes!("../../assets/fonts/Cairo-SemiBold.ttf"),
     ] {
-        let scope = allsorts::binary::read::ReadScope::new(&data);
-        let file = scope.read::<OpenTypeFile>()?;
+        let scope = ReadScope::new(&data);
+        let file = scope.read::<FontData<'_>>()?;
         let path = Path::new("memory");
 
-        match &file.font {
-            OpenTypeFont::Single(ttf) => {
-                let name_table_data = ttf
-                    .read_table(&file.scope, allsorts::tag::NAME)?
-                    .ok_or_else(|| format_err!("name table is not present"))?;
-
-                let names = Names::from_name_table_data(name_table_data.data())?;
-                font_info.push((
-                    names,
-                    path.to_path_buf(),
-                    FontDataHandle::Memory { data: data.to_vec(), index: 0 },
-                ));
-            }
-            OpenTypeFont::Collection(ttc) => {
-                for (index, offset_table_offset) in ttc.offset_tables.iter().enumerate() {
-                    let ttf =
-                        file.scope.offset(offset_table_offset as usize).read::<OffsetTable>()?;
+        match &file {
+            FontData::OpenType(open_type_font) => match &open_type_font.data {
+                OpenTypeData::Single(ttf) => {
                     let name_table_data = ttf
-                        .read_table(&file.scope, allsorts::tag::NAME)?
+                        .read_table(&open_type_font.scope, allsorts::tag::NAME)?
                         .ok_or_else(|| format_err!("name table is not present"))?;
+
                     let names = Names::from_name_table_data(name_table_data.data())?;
                     font_info.push((
                         names,
                         path.to_path_buf(),
-                        FontDataHandle::Memory { data: data.to_vec(), index: index as u32 },
+                        FontDataHandle::Memory { data: data.to_vec(), index: 0 },
                     ));
                 }
-            }
+                OpenTypeData::Collection(ttc) => {
+                    for (index, offset_table_offset) in ttc.offset_tables.iter().enumerate() {
+                        let ttf = open_type_font
+                            .scope
+                            .offset(offset_table_offset as usize)
+                            .read::<OffsetTable>()?;
+                        let name_table_data = ttf
+                            .read_table(&open_type_font.scope, allsorts::tag::NAME)?
+                            .ok_or_else(|| format_err!("name table is not present"))?;
+                        let names = Names::from_name_table_data(name_table_data.data())?;
+                        font_info.push((
+                            names,
+                            path.to_path_buf(),
+                            FontDataHandle::Memory { data: data.to_vec(), index: index as u32 },
+                        ));
+                    }
+                }
+            },
+            _ => failure::bail!("unhandled"),
         }
     }
 

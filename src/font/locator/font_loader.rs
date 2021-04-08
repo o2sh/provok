@@ -6,7 +6,7 @@ use font_loader::system_fonts;
 pub struct FontLoaderFontLocator {}
 
 impl FontLocator for FontLoaderFontLocator {
-    fn load_font(&self, attrs: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>> {
+    fn load_fonts(&self, attrs: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>> {
         let mut fonts = Vec::new();
         for attr in attrs {
             let mut font_props =

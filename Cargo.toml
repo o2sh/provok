@@ -5,6 +5,7 @@ name = "provok"
 version = "0.1.0"
 
 [dependencies]
+allsorts = "0.5.1"
 clap = "2.33.3"
 euclid = "0.22.2"
 failure = "0.1.8"

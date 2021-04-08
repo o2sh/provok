@@ -10,13 +10,14 @@ pub mod font_config;
 #[cfg(target_os = "macos")]
 pub mod font_loader;
 
+#[derive(Clone)]
 pub enum FontDataHandle {
     OnDisk { path: PathBuf, index: u32 },
     Memory { data: Vec<u8>, index: u32 },
 }
 
 pub trait FontLocator {
-    fn load_font(&self, font_attributes: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>>;
+    fn load_fonts(&self, font_attributes: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>>;
 }
 
 #[derive(Debug, Deserialize, Clone, Copy)]

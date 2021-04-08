@@ -11,10 +11,10 @@ use std::rc::Rc;
 const ATLAS_SIZE: usize = 4096;
 
 static VERTEX_SHADER: &str =
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex.glsl"));
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/vertex.glsl"));
 
 static FRAGMENT_SHADER: &str =
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment.glsl"));
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/fragment.glsl"));
 
 pub struct RenderMetrics {
     pub descender: PixelLength,

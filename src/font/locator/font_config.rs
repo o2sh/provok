@@ -7,7 +7,7 @@ use fcwrap::Pattern as FontPattern;
 pub struct FontConfigFontLocator {}
 
 impl FontLocator for FontConfigFontLocator {
-    fn load_font(&self, attrs: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>> {
+    fn load_fonts(&self, attrs: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>> {
         let mut fonts = vec![];
         let mut fallback = vec![];
 
