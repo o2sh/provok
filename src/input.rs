@@ -14,7 +14,6 @@ struct InputJson {
 struct WordJson {
     text: String,
     canvas_color: String,
-    font_family: Option<String>,
     fg_color: String,
     bg_color: Option<String>,
     bold: Option<bool>,
@@ -45,14 +44,22 @@ pub struct TextStyle {
     pub bg_color: Option<RgbColor>,
     pub underline: bool,
     pub strikethrough: bool,
-    pub fonts: Vec<FontAttributes>,
+    pub font: FontAttributes,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct FontAttributes {
     pub family: String,
+    #[serde(default)]
     pub bold: bool,
+    #[serde(default)]
     pub italic: bool,
+}
+
+impl FontAttributes {
+    pub fn new(family: &str) -> Self {
+        Self { family: family.into(), bold: false, italic: false }
+    }
 }
 
 impl Input {
@@ -60,7 +67,6 @@ impl Input {
         let input_json = InputJson::parse(path)?;
         let mut words: Vec<Word> = Vec::new();
         for word_json in input_json.words.iter() {
-            let font_family = if let Some(f) = &word_json.font_family { f } else { FONT_FAMILY };
             let bg_color = if let Some(c) = &word_json.bg_color {
                 Some(RgbColor::from_named_or_rgb_string(c).unwrap())
             } else {
@@ -75,11 +81,11 @@ impl Input {
                     bg_color,
                     underline: word_json.underline.unwrap_or(false),
                     strikethrough: word_json.strikethrough.unwrap_or(false),
-                    fonts: vec![FontAttributes {
-                        family: font_family.into(),
+                    font: FontAttributes {
+                        family: FONT_FAMILY.into(),
                         bold: word_json.bold.unwrap_or(false),
                         italic: word_json.italic.unwrap_or(false),
-                    }],
+                    },
                 },
             })
         }
@@ -96,27 +102,21 @@ impl Default for FontAttributes {
 
 impl TextStyle {
     pub fn make_bold(&mut self) {
-        for attr in self.fonts.iter_mut() {
-            attr.bold = true;
-        }
+        self.font.bold = true;
     }
 
     pub fn make_italic(&mut self) {
-        for attr in self.fonts.iter_mut() {
-            attr.italic = true;
-        }
+        self.font.italic = true;
     }
 
     pub fn font_with_fallback(&self) -> Vec<FontAttributes> {
-        let mut font = self.fonts.clone();
-
-        font.push(FontAttributes { family: "Noto Color Emoji".into(), bold: false, italic: false });
+        let mut fonts = Vec::new();
+        fonts.push(self.font.clone());
         #[cfg(not(target_os = "macos"))]
-        font.push(FontAttributes { family: "monospace".into(), bold: false, italic: false });
+        fonts.push(FontAttributes::new("kdjfldkmonopsace"));
         #[cfg(target_os = "macos")]
-        font.push(FontAttributes { family: "Menlo".into(), bold: false, italic: false });
-
-        font
+        fonts.push(FontAttributes::new("Menlo"));
+        fonts
     }
 }
 impl InputJson {

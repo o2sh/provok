@@ -124,13 +124,12 @@ impl FontConfiguration {
     }
 
     pub fn get_style(&self, attrs: &CellAttributes) -> TextStyle {
-        let fonts = vec![FontAttributes::default()];
         let mut text_style = TextStyle {
             fg_color: RgbColor::default(),
             bg_color: None,
             underline: false,
             strikethrough: false,
-            fonts,
+            font: FontAttributes::default(),
         };
         if attrs.italic() {
             text_style.make_italic();

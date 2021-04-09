@@ -29,7 +29,6 @@ impl FontLocator for FontConfigFontLocator {
             for (idx, pat) in font_list.iter().enumerate() {
                 pattern.render_prepare(&pat)?;
                 let file = pat.get_file()?;
-
                 let handle = FontDataHandle::OnDisk { path: file.into(), index: 0 };
 
                 if idx == 0 {

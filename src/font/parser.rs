@@ -35,13 +35,11 @@ pub fn load_fonts(attrs: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>> {
     let mut handles = vec![];
     for attr in attrs {
         for (names, path, handle) in &font_info {
-            println!("font loaded from disk: {}", names.full_name);
             if font_info_matches(attr, &names) {
                 log::warn!("Using {} from {}", names.full_name, path.display(),);
                 handles.push(handle.clone());
                 break;
             }
-            //            println!("{} not found", attr.family);
         }
     }
     Ok(handles)
