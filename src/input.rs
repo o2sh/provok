@@ -57,8 +57,8 @@ pub struct FontAttributes {
 }
 
 impl FontAttributes {
-    pub fn new(family: &str) -> Self {
-        Self { family: family.into(), bold: false, italic: false }
+    pub fn new(family: &str, bold: bool, italic: bool) -> Self {
+        Self { family: family.into(), bold, italic }
     }
 }
 
@@ -112,10 +112,7 @@ impl TextStyle {
     pub fn font_with_fallback(&self) -> Vec<FontAttributes> {
         let mut fonts = Vec::new();
         fonts.push(self.font.clone());
-        #[cfg(not(target_os = "macos"))]
-        fonts.push(FontAttributes::new("kdjfldkmonopsace"));
-        #[cfg(target_os = "macos")]
-        fonts.push(FontAttributes::new("Menlo"));
+        fonts.push(FontAttributes::new("Noto Sans Arabic", self.font.bold, self.font.italic));
         fonts
     }
 }
