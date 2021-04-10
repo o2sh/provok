@@ -5,10 +5,18 @@ use std::path::PathBuf;
 
 pub mod parser;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum FontDataHandle {
-    OnDisk { path: PathBuf, index: u32 },
-    Memory { data: Vec<u8>, index: u32 },
+    OnDisk {
+        path: PathBuf,
+        index: u32,
+    },
+    #[allow(dead_code)]
+    Memory {
+        name: String,
+        data: Vec<u8>,
+        index: u32,
+    },
 }
 
 pub trait FontLocator {

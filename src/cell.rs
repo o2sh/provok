@@ -3,6 +3,7 @@ use crate::input::TextStyle;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::mem;
+use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -69,6 +70,10 @@ impl Cell {
     pub fn attrs(&self) -> &CellAttributes {
         &self.attrs
     }
+}
+
+pub fn unicode_column_width(s: &str) -> usize {
+    s.graphemes(true).map(grapheme_column_width).sum()
 }
 
 pub fn grapheme_column_width(s: &str) -> usize {

@@ -2,7 +2,6 @@ use crate::font::locator::FontDataHandle;
 use crate::utils::PixelLength;
 use failure::{format_err, Error, Fallible};
 use serde::Deserialize;
-use std::sync::Mutex;
 
 pub mod freetype;
 
@@ -24,10 +23,6 @@ pub enum FontRasterizerSelection {
     FreeType,
 }
 
-lazy_static::lazy_static! {
-    static ref DEFAULT_RASTER: Mutex<FontRasterizerSelection> = Mutex::new(Default::default());
-}
-
 impl Default for FontRasterizerSelection {
     fn default() -> Self {
         FontRasterizerSelection::FreeType
@@ -35,20 +30,13 @@ impl Default for FontRasterizerSelection {
 }
 
 impl FontRasterizerSelection {
-    pub fn get_default() -> Self {
-        let def = DEFAULT_RASTER.lock().unwrap();
-        *def
-    }
-
     pub fn variants() -> Vec<&'static str> {
         vec!["FreeType"]
     }
+}
 
-    pub fn new_rasterizer(self, handle: &FontDataHandle) -> Fallible<Box<dyn FontRasterizer>> {
-        match self {
-            Self::FreeType => Ok(Box::new(freetype::FreeTypeRasterizer::from_locator(handle)?)),
-        }
-    }
+pub fn new_rasterizer(handle: &FontDataHandle) -> Fallible<Box<dyn FontRasterizer>> {
+    Ok(Box::new(freetype::FreeTypeRasterizer::from_locator(handle)?))
 }
 
 impl std::str::FromStr for FontRasterizerSelection {

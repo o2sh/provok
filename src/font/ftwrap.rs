@@ -1,7 +1,6 @@
 use crate::font::locator::FontDataHandle;
-use failure::{bail, format_err, Error, Fallible, ResultExt};
+use failure::{format_err, Fallible, ResultExt};
 pub use freetype::freetype::*;
-use std::ffi::CString;
 use std::ptr;
 
 #[inline]
@@ -9,7 +8,7 @@ pub fn succeeded(error: FT_Error) -> bool {
     error == freetype::freetype::FT_Err_Ok as FT_Error
 }
 
-fn ft_result<T>(err: FT_Error, t: T) -> Result<T, Error> {
+fn ft_result<T>(err: FT_Error, t: T) -> Fallible<T> {
     if succeeded(err) {
         Ok(t)
     } else {
@@ -17,13 +16,24 @@ fn ft_result<T>(err: FT_Error, t: T) -> Result<T, Error> {
     }
 }
 
-pub fn compute_load_flags_for_mode(render_mode: FT_Render_Mode) -> i32 {
-    FT_LOAD_COLOR as i32 | (render_mode as i32) << 16
+fn render_mode_to_load_target(render_mode: FT_Render_Mode) -> u32 {
+    (render_mode as u32) & 15 << 16
+}
+
+pub fn compute_load_flags() -> (i32, FT_Render_Mode) {
+    let render = FT_Render_Mode::FT_RENDER_MODE_LCD;
+
+    let flags = render_mode_to_load_target(FT_Render_Mode::FT_RENDER_MODE_LCD);
+
+    let flags = flags | FT_LOAD_COLOR;
+
+    (flags as i32, render)
 }
 
 pub struct Face {
     pub face: FT_Face,
     _bytes: Vec<u8>,
+    size: Option<FaceSize>,
 }
 
 impl Drop for Face {
@@ -34,11 +44,23 @@ impl Drop for Face {
     }
 }
 
-impl Face {
-    pub fn set_font_size(&mut self, size: f64, dpi: u32) -> Fallible<(f64, f64)> {
-        log::debug!("set_char_size {} dpi={}", size, dpi);
+struct FaceSize {
+    size: f64,
+    dpi: u32,
+    cell_width: f64,
+    cell_height: f64,
+}
 
-        let size = (size * 64.0) as FT_F26Dot6;
+impl Face {
+    pub fn set_font_size(&mut self, point_size: f64, dpi: u32) -> Fallible<(f64, f64)> {
+        if let Some(face_size) = self.size.as_ref() {
+            if face_size.size == point_size && face_size.dpi == dpi {
+                return Ok((face_size.cell_width, face_size.cell_height));
+            }
+        }
+
+        log::debug!("set_char_size computing {} dpi={}", point_size, dpi);
+        let size = (point_size * 64.0) as FT_F26Dot6;
 
         let (cell_width, cell_height) = match self.set_char_size(size, size, dpi, dpi) {
             Ok(_) => self.cell_metrics(),
@@ -50,7 +72,6 @@ impl Face {
                 if sizes.is_empty() {
                     return Err(err);
                 }
-
                 let mut best = 0;
                 let mut best_size = 0;
                 let mut cell_width = 0;
@@ -70,16 +91,18 @@ impl Face {
             }
         };
 
+        self.size.replace(FaceSize { size: point_size, dpi, cell_width, cell_height });
+
         Ok((cell_width, cell_height))
     }
 
-    pub fn set_char_size(
+    fn set_char_size(
         &mut self,
         char_width: FT_F26Dot6,
         char_height: FT_F26Dot6,
         horz_resolution: FT_UInt,
         vert_resolution: FT_UInt,
-    ) -> Result<(), Error> {
+    ) -> Fallible<()> {
         ft_result(
             unsafe {
                 FT_Set_Char_Size(
@@ -94,13 +117,7 @@ impl Face {
         )
     }
 
-    #[allow(unused)]
-    pub fn set_pixel_sizes(&mut self, char_width: u32, char_height: u32) -> Fallible<()> {
-        ft_result(unsafe { FT_Set_Pixel_Sizes(self.face, char_width, char_height) }, ())
-            .map_err(|e| e.context("set_pixel_sizes").into())
-    }
-
-    pub fn select_size(&mut self, idx: usize) -> Result<(), Error> {
+    fn select_size(&mut self, idx: usize) -> Fallible<()> {
         ft_result(unsafe { FT_Select_Size(self.face, idx as i32) }, ())
     }
 
@@ -109,16 +126,11 @@ impl Face {
         glyph_index: FT_UInt,
         load_flags: FT_Int32,
         render_mode: FT_Render_Mode,
-    ) -> Result<&FT_GlyphSlotRec_, Error> {
+    ) -> Fallible<&FT_GlyphSlotRec_> {
         unsafe {
             let res = FT_Load_Glyph(self.face, glyph_index, load_flags);
-            if succeeded(res) {
-                let render = FT_Render_Glyph((*self.face).glyph, render_mode);
-                if !succeeded(render) {
-                    bail!("FT_Render_Glyph failed: {:?}", render);
-                }
-            }
-            ft_result(res, &*(*self.face).glyph)
+            let slot = ft_result(res, &mut *(*self.face).glyph)?;
+            ft_result(FT_Render_Glyph(slot, render_mode), slot)
         }
     }
 
@@ -131,6 +143,9 @@ impl Face {
             let mut width = 0.0;
             for i in 32..128 {
                 let glyph_pos = FT_Get_Char_Index(self.face, i);
+                if glyph_pos == 0 {
+                    continue;
+                }
                 let res = FT_Load_Glyph(self.face, glyph_pos, FT_LOAD_COLOR as i32);
                 if succeeded(res) {
                     let glyph = &(*(*self.face).glyph);
@@ -157,11 +172,21 @@ impl Drop for Library {
 }
 
 impl Library {
-    pub fn new() -> Result<Library, Error> {
+    pub fn new() -> Fallible<Library> {
         let mut lib = ptr::null_mut();
         let res = unsafe { FT_Init_FreeType(&mut lib as *mut _) };
         let lib = ft_result(res, lib).context("FT_Init_FreeType")?;
         let mut lib = Library { lib };
+
+        let interpreter_version: FT_UInt = 38;
+        unsafe {
+            FT_Property_Set(
+                lib.lib,
+                b"truetype\0" as *const u8 as *const FT_String,
+                b"interpreter-version\0" as *const u8 as *const FT_String,
+                &interpreter_version as *const FT_UInt as *const _,
+            );
+        }
 
         lib.set_lcd_filter(FT_LcdFilter::FT_LCD_FILTER_DEFAULT).ok();
 
@@ -173,24 +198,41 @@ impl Library {
             FontDataHandle::OnDisk { path, index } => {
                 self.new_face(path.to_str().unwrap(), *index as _)
             }
-            FontDataHandle::Memory { data, index } => self.new_face_from_slice(&data, *index as _),
+            FontDataHandle::Memory { data, index, .. } => {
+                self.new_face_from_slice(&data, *index as _)
+            }
         }
     }
 
-    #[allow(dead_code)]
-    pub fn new_face<P>(&self, path: P, face_index: FT_Long) -> Result<Face, Error>
+    pub fn new_face<P>(&self, path: P, face_index: FT_Long) -> Fallible<Face>
     where
-        P: Into<Vec<u8>>,
+        P: AsRef<std::path::Path>,
     {
         let mut face = ptr::null_mut();
-        let path = CString::new(path.into())?;
+        let path = path.as_ref();
 
-        let res = unsafe { FT_New_Face(self.lib, path.as_ptr(), face_index, &mut face as *mut _) };
-        Ok(Face { face: ft_result(res, face).context("FT_New_Face")?, _bytes: Vec::new() })
+        let data = std::fs::read(path)?;
+        log::trace!("Loading {} for freetype!", path.display());
+
+        let res = unsafe {
+            FT_New_Memory_Face(
+                self.lib,
+                data.as_ptr(),
+                data.len() as _,
+                face_index,
+                &mut face as *mut _,
+            )
+        };
+        Ok(Face {
+            face: ft_result(res, face).with_context(|_| {
+                format!("FT_New_Memory_Face for {} index {}", path.display(), face_index)
+            })?,
+            _bytes: data,
+            size: None,
+        })
     }
 
-    #[allow(dead_code)]
-    pub fn new_face_from_slice(&self, data: &[u8], face_index: FT_Long) -> Result<Face, Error> {
+    pub fn new_face_from_slice(&self, data: &[u8], face_index: FT_Long) -> Fallible<Face> {
         let data = data.to_vec();
         let mut face = ptr::null_mut();
 
@@ -205,12 +247,13 @@ impl Library {
         };
         Ok(Face {
             face: ft_result(res, face)
-                .map_err(|e| e.context(format!("FT_New_Memory_Face for index {}", face_index)))?,
+                .with_context(|_| format!("FT_New_Memory_Face for index {}", face_index))?,
             _bytes: data,
+            size: None,
         })
     }
 
-    pub fn set_lcd_filter(&mut self, filter: FT_LcdFilter) -> Result<(), Error> {
+    pub fn set_lcd_filter(&mut self, filter: FT_LcdFilter) -> Fallible<()> {
         unsafe { ft_result(FT_Library_SetLcdFilter(self.lib, filter), ()) }
     }
 }

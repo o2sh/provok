@@ -44,9 +44,8 @@ dependencies = [
 
 [[package]]
 name = "allsorts"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb87814c8bb3a307c3fd61242685529281396618f8dee5277c54a56f4f734d55"
+version = "0.4.0"
+source = "git+https://github.com/yeslogic/allsorts.git?rev=3947164a201ab5e15d5f23204faaaaaad52531aa#3947164a201ab5e15d5f23204faaaaaad52531aa"
 dependencies = [
  "bitflags",
  "bitreader",
@@ -63,8 +62,7 @@ dependencies = [
  "rental",
  "rustc-hash",
  "tinyvec",
- "ucd-trie",
- "unicode-general-category",
+ "unicode-general-category 0.1.0",
  "unicode-joining-type",
 ]
 
@@ -1127,6 +1125,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af8b08b04175473088b46763e51ee54da5f9a164bc162f615b91bc179dbf15a3"
 
 [[package]]
+name = "ordered-float"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "766f840da25490628d8e63e529cd21c014f6600c6b8517add12a6fa6167a6218"
+dependencies = [
+ "num-traits 0.2.14",
+]
+
+[[package]]
 name = "osmesa-sys"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1281,12 +1288,15 @@ dependencies = [
  "lazy_static",
  "line_drawing",
  "log",
+ "ordered-float",
  "palette",
  "resize",
  "rgb",
  "serde",
  "serde_json",
  "smallvec",
+ "tinyvec",
+ "unicode-general-category 0.4.0",
  "unicode-segmentation",
  "unicode-width",
  "xi-unicode",
@@ -1644,22 +1654,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e5d7cd7ab3e47dda6e56542f4bbf3824c15234958c6e1bd6aaa347e93499fdc"
 
 [[package]]
-name = "ucd-trie"
-version = "0.1.3"
+name = "unicode-general-category"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56dee185309b50d1f11bfedef0fe6d036842e3fb77413abef29f8f8d1c5d4c1c"
+checksum = "961c7c250ebd2c88c8f2ca994489e6cac38fe94301f843f0785ed86bc5490881"
 
 [[package]]
 name = "unicode-general-category"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eab1e2c61f9441613aca1a1c88803bb36df292990aada6abb5133b9b532e07ec"
+checksum = "07547e3ee45e28326cc23faac56d44f58f16ab23e413db526debce3b0bfd2742"
 
 [[package]]
 name = "unicode-joining-type"
-version = "0.4.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8896d2fce4865edb68e5a39b48f4281d041f743de5b9f0380ba4dd0ef51497e4"
+checksum = "aa33c011d7f075f1e724a8401666be7c7aaa922af7c3b0151e5618c9ed5b599e"
 
 [[package]]
 name = "unicode-segmentation"

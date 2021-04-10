@@ -13,14 +13,11 @@ pub struct FreeTypeRasterizer {
     face: RefCell<ftwrap::Face>,
     _lib: ftwrap::Library,
 }
-
 impl FontRasterizer for FreeTypeRasterizer {
     fn rasterize_glyph(&self, glyph_pos: u32, size: f64, dpi: u32) -> Fallible<RasterizedGlyph> {
         self.face.borrow_mut().set_font_size(size, dpi)?;
 
-        let render_mode = ftwrap::FT_Render_Mode::FT_RENDER_MODE_LIGHT;
-
-        let load_flags = ftwrap::compute_load_flags_for_mode(render_mode);
+        let (load_flags, render_mode) = ftwrap::compute_load_flags();
 
         let mut face = self.face.borrow_mut();
         let descender = unsafe { (*(*face.face).size).metrics.descender as f64 / 64.0 };
@@ -41,7 +38,7 @@ impl FontRasterizer for FreeTypeRasterizer {
             }
             ftwrap::FT_Pixel_Mode::FT_PIXEL_MODE_GRAY => self.rasterize_gray(pitch, ft_glyph, data),
             ftwrap::FT_Pixel_Mode::FT_PIXEL_MODE_MONO => self.rasterize_mono(pitch, ft_glyph, data),
-            mode => failure::bail!("unhandled pixel mode: {:?}", mode),
+            mode => bail!("unhandled pixel mode: {:?}", mode),
         };
         Ok(glyph)
     }
@@ -137,10 +134,10 @@ impl FreeTypeRasterizer {
             let src_offset = y * pitch as usize;
             let dest_offset = y * width * 4;
             for x in 0..width {
-                let blue = data[src_offset + (x * 3)];
+                let red = data[src_offset + (x * 3)];
                 let green = data[src_offset + (x * 3) + 1];
-                let red = data[src_offset + (x * 3) + 2];
-                let alpha = red | green | blue;
+                let blue = data[src_offset + (x * 3) + 2];
+                let alpha = red.min(green).min(blue);
                 rgba[dest_offset + (x * 4)] = red;
                 rgba[dest_offset + (x * 4) + 1] = green;
                 rgba[dest_offset + (x * 4) + 2] = blue;
