@@ -104,10 +104,10 @@ impl AllsortsShaper {
 }
 
 impl FontShaper for AllsortsShaper {
-    fn shape(&self, text: &str, size: f64, dpi: u32) -> Fallible<Vec<GlyphInfo>> {
+    fn shape(&self, text: &str, size: f64, dpi: u32, is_arabic: bool) -> Fallible<Vec<GlyphInfo>> {
         let mut results = vec![];
-        let script = allsorts::tag::LATN;
-        let lang = allsorts::tag::DFLT;
+        let script = if is_arabic { allsorts::tag::ARAB } else { allsorts::tag::LATN };
+        let lang = if is_arabic { allsorts::tag::ARAB } else { allsorts::tag::LATN };
         self.shape_into(0, text, 0, script, lang, size, dpi, &mut results)?;
         Ok(results)
     }

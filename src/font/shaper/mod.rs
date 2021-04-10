@@ -31,8 +31,7 @@ pub struct FontMetrics {
 }
 
 pub trait FontShaper {
-    fn shape(&self, text: &str, size: f64, dpi: u32) -> Fallible<Vec<GlyphInfo>>;
-
+    fn shape(&self, text: &str, size: f64, dpi: u32, is_arabic: bool) -> Fallible<Vec<GlyphInfo>>;
     fn metrics(&self, size: f64, dpi: u32) -> Fallible<FontMetrics>;
     fn metrics_for_idx(&self, font_idx: usize, size: f64, dpi: u32) -> Fallible<FontMetrics>;
 }

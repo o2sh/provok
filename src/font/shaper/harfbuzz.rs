@@ -253,7 +253,7 @@ impl HarfbuzzShaper {
 }
 
 impl FontShaper for HarfbuzzShaper {
-    fn shape(&self, text: &str, size: f64, dpi: u32) -> Fallible<Vec<GlyphInfo>> {
+    fn shape(&self, text: &str, size: f64, dpi: u32, _: bool) -> Fallible<Vec<GlyphInfo>> {
         let result = self.do_shape(0, text, size, dpi);
         result
     }

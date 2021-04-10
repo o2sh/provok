@@ -15,6 +15,8 @@ use glium::glutin::event_loop::EventLoop;
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
 use glium::{Display, Frame, Surface};
+use lingua::Language::{Arabic, English};
+use lingua::{Language, LanguageDetector, LanguageDetectorBuilder};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -52,6 +54,8 @@ fn run(input_path: &str) -> Fallible<()> {
     let render_metrics = RenderMetrics::new(&fontconfig, 720., 405.);
     let palette = ColorPalette::default();
     let mut render_state = RenderState::new(&display, &render_metrics, &fontconfig)?;
+    let languages = vec![English, Arabic];
+    let detector: LanguageDetector = LanguageDetectorBuilder::from_languages(&languages).build();
     let mut i = 0;
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -86,6 +90,7 @@ fn run(input_path: &str) -> Fallible<()> {
             &palette,
             &fontconfig,
             &mut target,
+            &detector,
             &input.words[i],
         )
         .unwrap();
@@ -100,6 +105,7 @@ fn paint(
     palette: &ColorPalette,
     fontconfig: &Rc<FontConfiguration>,
     frame: &mut Frame,
+    language_detector: &LanguageDetector,
     word: &Word,
 ) -> Fallible<()> {
     frame.clear_color(
@@ -110,7 +116,7 @@ fn paint(
     );
     let style = CellAttributes::from_text_style(&word.style);
     let line = Line::from_text(word.text.as_str(), &style);
-    render_text(line, render_state, render_metrics, palette, fontconfig)?;
+    render_text(line, render_state, render_metrics, palette, fontconfig, language_detector)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
         -(render_metrics.win_size.width as f32) / 2.0,
         render_metrics.win_size.width as f32 / 2.0,
@@ -158,6 +164,7 @@ fn render_text(
     render_metrics: &RenderMetrics,
     palette: &ColorPalette,
     fontconfig: &FontConfiguration,
+    language_detector: &LanguageDetector,
 ) -> Fallible<()> {
     let cell_width = render_metrics.cell_size.width as f32;
     let num_cols = render_metrics.win_size.width as usize / cell_width as usize;
@@ -177,9 +184,11 @@ fn render_text(
 
         let fg_color = rgbcolor_to_color(fg_color);
 
+        let lang = language_detector.detect_language_of(&cluster.text);
+        let is_arabic = if lang == Some(Language::Arabic) { true } else { false };
         let glyph_info = {
             let font = fontconfig.resolve_font(&style)?;
-            font.shape(&cluster.text)?
+            font.shape(&cluster.text, is_arabic)?
         };
 
         for info in &glyph_info {
@@ -196,8 +205,11 @@ fn render_text(
                 .select_sprite(attrs.strikethrough(), attrs.underline())
                 .texture_coords();
             for glyph_idx in 0..info.num_cells as usize {
-                let cell_idx = start_pos + cell_idx + glyph_idx;
-
+                let cell_idx = if is_arabic {
+                    start_pos + line.len() - cell_idx - glyph_idx
+                } else {
+                    start_pos + cell_idx + glyph_idx
+                };
                 if cell_idx >= num_cols {
                     break;
                 }

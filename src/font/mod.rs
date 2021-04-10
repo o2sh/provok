@@ -35,8 +35,8 @@ impl LoadedFont {
         self.metrics
     }
 
-    pub fn shape(&self, text: &str) -> Fallible<Vec<GlyphInfo>> {
-        self.shaper.shape(text, self.font_size, self.dpi)
+    pub fn shape(&self, text: &str, is_arabic: bool) -> Fallible<Vec<GlyphInfo>> {
+        self.shaper.shape(text, self.font_size, self.dpi, is_arabic)
     }
 
     pub fn rasterize_glyph(
