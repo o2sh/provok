@@ -27,11 +27,6 @@ pub fn load_fonts(attrs: &[FontAttributes]) -> Fallible<Vec<FontDataHandle>> {
 
     load_built_in_fonts(&mut font_info).ok();
 
-    font_info.sort_by_key(|(names, _, _)| names.full_name.clone());
-    for (names, _, _) in &font_info {
-        log::warn!("available font: {}", names.full_name);
-    }
-
     let mut handles = vec![];
     for attr in attrs {
         for (names, path, handle) in &font_info {
@@ -66,23 +61,86 @@ fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
 
 fn load_built_in_fonts(font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>) -> Fallible<()> {
     for data in &[
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-BoldItalic.ttf")
-            as &'static [u8],
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-Bold.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-ExtraBoldItalic.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-ExtraBold.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-ExtraLightItalic.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-ExtraLight.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-Italic.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-LightItalic.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-Light.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-MediumItalic.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-Medium.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-Regular.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-ThinItalic.ttf"),
-        include_bytes!("../../../assets/fonts/jet_brains/JetBrainsMono-Thin.ttf"),
-        include_bytes!("../../../assets/fonts/noto/NotoSansArabic-Bold.ttf"),
-        include_bytes!("../../../assets/fonts/noto/NotoSansArabic-Regular.ttf"),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-BoldItalic.ttf"
+        )) as &'static [u8],
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-Bold.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-ExtraBoldItalic.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-ExtraBold.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-ExtraLightItalic.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-ExtraLight.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-Italic.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-LightItalic.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-Light.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-MediumItalic.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-Medium.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-Regular.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-ThinItalic.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/jet_brains/JetBrainsMono-Thin.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/noto/NotoSansArabic-Bold.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/noto/NotoSansArabic-Regular.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/noto/NotoSansJP-Bold.otf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/noto/NotoSansJP-Regular.otf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/noto/NotoSansThai-Bold.ttf"
+        )),
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/fonts/noto/NotoSansThai-Regular.ttf"
+        )),
     ] {
         let scope = ReadScope::new(&data);
         let file = scope.read::<FontData<'_>>()?;

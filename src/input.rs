@@ -113,6 +113,8 @@ impl TextStyle {
         let mut fonts = Vec::new();
         fonts.push(self.font.clone());
         fonts.push(FontAttributes::new("Noto Sans Arabic", self.font.bold, self.font.italic));
+        fonts.push(FontAttributes::new("Noto Sans JP", self.font.bold, self.font.italic));
+        fonts.push(FontAttributes::new("Noto Sans Thai", self.font.bold, self.font.italic));
         fonts
     }
 }
