@@ -1,4 +1,4 @@
-use crate::cell::unicode_column_width;
+use crate::font::locator::unicode_column_width;
 use crate::font::locator::FontDataHandle;
 use crate::font::shaper::GlyphInfo;
 pub use crate::font::shaper::{FallbackIdx, FontMetrics};
@@ -16,7 +16,6 @@ use allsorts::tables::{
 };
 use allsorts::tag;
 use failure::{Fallible, ResultExt};
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use tinyvec::*;
 use unicode_general_category::{get_general_category, GeneralCategory};
@@ -66,46 +65,29 @@ impl Names {
 }
 
 impl ParsedFont {
-    pub fn load_built_in_fonts(
-        fonts_selection: &[FontAttributes],
-        loaded: &mut HashSet<FontAttributes>,
-    ) -> Fallible<Vec<FontDataHandle>> {
+    pub fn load_built_in_font(font_attributes: &FontAttributes) -> Fallible<FontDataHandle> {
         let mut font_info = vec![];
         load_built_in_fonts(&mut font_info).ok();
-        Self::match_font_info(fonts_selection, font_info, loaded)
+        Self::match_font_info(font_attributes, font_info)
     }
 
     fn match_font_info(
-        fonts_selection: &[FontAttributes],
+        attr: &FontAttributes,
         mut font_info: Vec<(Names, std::path::PathBuf, FontDataHandle)>,
-        loaded: &mut HashSet<FontAttributes>,
-    ) -> Fallible<Vec<FontDataHandle>> {
+    ) -> Fallible<FontDataHandle> {
         font_info.sort_by_key(|(names, _, _)| names.full_name.clone());
-        for (names, _, _) in &font_info {
-            log::warn!("available font: {}", names.full_name);
-        }
 
-        let mut handles = vec![];
-        for attr in fonts_selection {
-            for (names, path, handle) in &font_info {
-                if font_info_matches(attr, &names) {
-                    log::warn!("Using {} from {} for {:?}", names.full_name, path.display(), attr);
-                    handles.push(handle.clone());
-                    loaded.insert(attr.clone());
-                    break;
-                }
+        for (names, _, handle) in &font_info {
+            if font_info_matches(attr, &names) {
+                return Ok(handle.clone());
             }
         }
-        Ok(handles)
+        failure::bail!("Could not find font");
     }
 
     pub fn from_locator(handle: &FontDataHandle) -> Fallible<Self> {
         let (data, index) = match handle {
             FontDataHandle::Memory { data, index, .. } => (data.to_vec(), *index),
-            FontDataHandle::OnDisk { path, index } => {
-                let data = std::fs::read(path)?;
-                (data, *index)
-            }
         };
 
         let index = index as usize;
@@ -276,7 +258,6 @@ impl ParsedFont {
         &self,
         text: T,
         slice_index: usize,
-        font_index: FallbackIdx,
         script: u32,
         lang: u32,
         point_size: f64,
@@ -430,7 +411,6 @@ impl ParsedFont {
                             text,
                             cluster: cluster as u32,
                             num_cells: num_cells as u8,
-                            font_idx: font_index,
                             glyph_pos: glyph_index as u32,
                             x_advance,
                             y_advance,
@@ -447,21 +427,6 @@ impl ParsedFont {
 
         Ok(pos)
     }
-}
-
-fn collect_font_info(
-    name_table_data: &[u8],
-    path: &Path,
-    index: usize,
-    infos: &mut Vec<(Names, PathBuf, FontDataHandle)>,
-) -> Fallible<()> {
-    let names = Names::from_name_table_data(name_table_data)?;
-    infos.push((
-        names,
-        path.to_path_buf(),
-        FontDataHandle::OnDisk { path: path.to_path_buf(), index: index as u32 },
-    ));
-    Ok(())
 }
 
 pub fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
@@ -585,35 +550,6 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>) ->
                         },
                     ));
                 }
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn parse_and_collect_font_info(
-    path: &Path,
-    font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>,
-) -> Fallible<()> {
-    let data = std::fs::read(path)?;
-    let scope = allsorts::binary::read::ReadScope::new(&data);
-    let file = scope.read::<OpenTypeFile>()?;
-
-    match &file.font {
-        OpenTypeFont::Single(ttf) => {
-            let data = ttf
-                .read_table(&file.scope, allsorts::tag::NAME)?
-                .ok_or_else(|| format_err!("name table is not present"))?;
-            collect_font_info(data.data(), path, 0, font_info)?;
-        }
-        OpenTypeFont::Collection(ttc) => {
-            for (index, offset_table_offset) in ttc.offset_tables.iter().enumerate() {
-                let ttf = file.scope.offset(offset_table_offset as usize).read::<OffsetTable>()?;
-                let data = ttf
-                    .read_table(&file.scope, allsorts::tag::NAME)?
-                    .ok_or_else(|| format_err!("name table is not present"))?;
-                collect_font_info(data.data(), path, index, font_info).ok();
             }
         }
     }

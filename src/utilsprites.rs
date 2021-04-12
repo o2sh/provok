@@ -1,6 +1,5 @@
 use crate::bitmaps::atlas::{OutOfTextureSpace, Sprite};
 use crate::bitmaps::{BitmapImage, Image, Texture2d};
-use crate::cell::Underline;
 use crate::color::Color;
 use crate::glyphcache::GlyphCache;
 use crate::renderstate::RenderMetrics;
@@ -123,14 +122,12 @@ impl<T: Texture2d> UtilSprites<T> {
         })
     }
 
-    pub fn select_sprite(&self, is_strike_through: bool, underline: Underline) -> &Sprite<T> {
+    pub fn select_sprite(&self, is_strike_through: bool, underline: bool) -> &Sprite<T> {
         match (is_strike_through, underline) {
-            (false, Underline::None) => &self.white_space,
-            (false, Underline::Single) => &self.single_underline,
-            (false, Underline::Double) => &self.double_underline,
-            (true, Underline::None) => &self.strike_through,
-            (true, Underline::Single) => &self.single_and_strike,
-            (true, Underline::Double) => &self.double_and_strike,
+            (false, false) => &self.white_space,
+            (false, true) => &self.single_underline,
+            (true, false) => &self.strike_through,
+            (true, true) => &self.single_and_strike,
         }
     }
 }

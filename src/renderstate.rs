@@ -1,12 +1,12 @@
 use crate::font::FontConfiguration;
 use crate::glyphcache::GlyphCache;
+use crate::input::TextStyle;
 use crate::quad::*;
 use crate::utils::{IntPixelLength, PixelLength, Size};
 use crate::utilsprites::UtilSprites;
 use failure::Fallible;
 use glium::texture::SrgbTexture2d;
 use glium::{Display, IndexBuffer, VertexBuffer};
-use std::rc::Rc;
 
 const ATLAS_SIZE: usize = 4096;
 
@@ -27,9 +27,14 @@ pub struct RenderMetrics {
 }
 
 impl RenderMetrics {
-    pub fn new(fonts: &FontConfiguration, width: f32, height: f32) -> Self {
+    pub fn new(
+        font_config: &FontConfiguration,
+        style: &TextStyle,
+        width: f32,
+        height: f32,
+    ) -> Self {
         let win_size = Size::new(width as isize, height as isize);
-        let metrics = fonts.default_font_metrics().expect("failed to get font metrics!?");
+        let metrics = font_config.font_metrics(style).expect("failed to get font metrics!?");
 
         let (cell_height, cell_width) =
             (metrics.cell_height.get().ceil() as usize, metrics.cell_width.get().ceil() as usize);
@@ -53,8 +58,22 @@ impl RenderMetrics {
     }
 }
 
+pub fn compile_shaders(display: &Display) -> Fallible<glium::Program> {
+    let glyph_source = glium::program::ProgramCreationInput::SourceCode {
+        vertex_shader: VERTEX_SHADER,
+        fragment_shader: FRAGMENT_SHADER,
+        outputs_srgb: true,
+        tessellation_control_shader: None,
+        tessellation_evaluation_shader: None,
+        transform_feedback_varyings: None,
+        uses_point_size: false,
+        geometry_shader: None,
+    };
+    let program = glium::Program::new(display, glyph_source)?;
+    Ok(program)
+}
+
 pub struct RenderState {
-    pub program: glium::Program,
     pub glyph_cache: GlyphCache<SrgbTexture2d>,
     pub util_sprites: UtilSprites<SrgbTexture2d>,
     pub glyph_vertex_buffer: VertexBuffer<Vertex>,
@@ -62,40 +81,14 @@ pub struct RenderState {
 }
 
 impl RenderState {
-    pub fn new(
-        display: &Display,
-        render_metrics: &RenderMetrics,
-        fontconfig: &Rc<FontConfiguration>,
-    ) -> Fallible<Self> {
-        let mut glyph_cache = GlyphCache::new(&display, fontconfig, ATLAS_SIZE)?;
+    pub fn new(display: &Display, render_metrics: &RenderMetrics) -> Fallible<Self> {
+        let mut glyph_cache = GlyphCache::new(&display, ATLAS_SIZE)?;
         let util_sprites = UtilSprites::new(&mut glyph_cache, render_metrics)?;
-        let glyph_source = glium::program::ProgramCreationInput::SourceCode {
-            vertex_shader: VERTEX_SHADER,
-            fragment_shader: FRAGMENT_SHADER,
-            outputs_srgb: true,
-            tessellation_control_shader: None,
-            tessellation_evaluation_shader: None,
-            transform_feedback_varyings: None,
-            uses_point_size: false,
-            geometry_shader: None,
-        };
-        let program = glium::Program::new(display, glyph_source)?;
         let (glyph_vertex_buffer, glyph_index_buffer) =
             Self::compute_glyph_vertices(&render_metrics, display)?;
-        Ok(Self { program, glyph_cache, util_sprites, glyph_vertex_buffer, glyph_index_buffer })
+        Ok(Self { glyph_cache, util_sprites, glyph_vertex_buffer, glyph_index_buffer })
     }
 
-    pub fn recompute_glyph_vertices(
-        &mut self,
-        render_metrics: &RenderMetrics,
-        display: &Display,
-    ) -> Fallible<()> {
-        let (glyph_vertex_buffer, glyph_index_buffer) =
-            Self::compute_glyph_vertices(&render_metrics, display)?;
-        self.glyph_vertex_buffer = glyph_vertex_buffer;
-        self.glyph_index_buffer = glyph_index_buffer;
-        Ok(())
-    }
     pub fn compute_glyph_vertices(
         render_metrics: &RenderMetrics,
         display: &Display,

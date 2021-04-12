@@ -1,4 +1,4 @@
-use crate::cell::{Cell, CellAttributes};
+use crate::cell::Cell;
 use crate::cellcluster::CellCluster;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -8,15 +8,15 @@ pub struct Line {
 }
 
 impl Line {
-    pub fn from_text(s: &str, attrs: &CellAttributes) -> Line {
+    pub fn from_text(s: &str) -> Line {
         let mut cells = Vec::new();
 
         for sub in s.graphemes(true) {
-            let cell = Cell::new_grapheme(sub, attrs.clone());
+            let cell = Cell::new_grapheme(sub);
             let width = cell.width();
             cells.push(cell);
             for _ in 1..width {
-                cells.push(Cell::new(' ', attrs.clone()));
+                cells.push(Cell::new(' '));
             }
         }
 
@@ -40,13 +40,7 @@ impl Line {
         })
     }
 
-    pub fn cluster(&self) -> Vec<CellCluster> {
+    pub fn cluster(&self) -> Option<CellCluster> {
         CellCluster::make_cluster(self.visible_cells())
-    }
-}
-
-impl<'a> From<&'a str> for Line {
-    fn from(s: &str) -> Line {
-        Line::from_text(s, &CellAttributes::default())
     }
 }

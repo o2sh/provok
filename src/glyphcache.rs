@@ -1,6 +1,6 @@
 use crate::bitmaps::atlas::{Atlas, Sprite};
 use crate::bitmaps::{Image, Texture2d};
-use crate::font::{FontConfiguration, GlyphInfo};
+use crate::font::{GlyphInfo, LoadedFont};
 use crate::input::TextStyle;
 use crate::utils::PixelLength;
 use euclid::num::Zero;
@@ -12,7 +12,6 @@ use std::rc::Rc;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GlyphKey {
-    pub font_idx: usize,
     pub glyph_pos: u32,
     pub style: TextStyle,
 }
@@ -30,11 +29,10 @@ pub struct CachedGlyph<T: Texture2d> {
 pub struct GlyphCache<T: Texture2d> {
     glyph_cache: HashMap<GlyphKey, Rc<CachedGlyph<T>>>,
     pub atlas: Atlas<T>,
-    fonts: Rc<FontConfiguration>,
 }
 
 impl GlyphCache<SrgbTexture2d> {
-    pub fn new(backend: &Display, fonts: &Rc<FontConfiguration>, size: usize) -> Fallible<Self> {
+    pub fn new(backend: &Display, size: usize) -> Fallible<Self> {
         let surface = Rc::new(SrgbTexture2d::empty_with_format(
             backend,
             glium::texture::SrgbFormat::U8U8U8U8,
@@ -44,38 +42,36 @@ impl GlyphCache<SrgbTexture2d> {
         )?);
         let atlas = Atlas::new(&surface).expect("failed to create new texture atlas");
 
-        Ok(Self { fonts: Rc::clone(fonts), glyph_cache: HashMap::new(), atlas })
+        Ok(Self { glyph_cache: HashMap::new(), atlas })
     }
 }
 
 impl<T: Texture2d> GlyphCache<T> {
     pub fn cached_glyph(
         &mut self,
+        font: &Rc<LoadedFont>,
         info: &GlyphInfo,
         style: &TextStyle,
     ) -> Fallible<Rc<CachedGlyph<T>>> {
-        let key =
-            GlyphKey { font_idx: info.font_idx, glyph_pos: info.glyph_pos, style: style.clone() };
+        let key = GlyphKey { glyph_pos: info.glyph_pos, style: style.clone() };
 
         if let Some(entry) = self.glyph_cache.get(&key) {
             return Ok(Rc::clone(entry));
         }
 
-        let glyph = self.load_glyph(info, style)?;
+        let glyph = self.load_glyph(info, font)?;
         self.glyph_cache.insert(key, Rc::clone(&glyph));
         Ok(glyph)
     }
 
     #[allow(clippy::float_cmp)]
-    fn load_glyph(&mut self, info: &GlyphInfo, style: &TextStyle) -> Fallible<Rc<CachedGlyph<T>>> {
-        let metrics;
-        let glyph;
-
-        {
-            let font = self.fonts.resolve_font(style)?;
-            metrics = font.metrics();
-            glyph = font.rasterize_glyph(info.glyph_pos, info.font_idx)?;
-        }
+    fn load_glyph(
+        &mut self,
+        info: &GlyphInfo,
+        font: &Rc<LoadedFont>,
+    ) -> Fallible<Rc<CachedGlyph<T>>> {
+        let metrics = font.metrics();
+        let glyph = font.rasterize_glyph(info.glyph_pos)?;
         let (cell_width, cell_height) = (metrics.cell_width, metrics.cell_height);
 
         let scale = if (info.x_advance / f64::from(info.num_cells)).get().floor() > cell_width.get()

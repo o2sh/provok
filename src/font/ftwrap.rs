@@ -195,41 +195,10 @@ impl Library {
 
     pub fn face_from_locator(&self, handle: &FontDataHandle) -> Fallible<Face> {
         match handle {
-            FontDataHandle::OnDisk { path, index } => {
-                self.new_face(path.to_str().unwrap(), *index as _)
-            }
             FontDataHandle::Memory { data, index, .. } => {
                 self.new_face_from_slice(&data, *index as _)
             }
         }
-    }
-
-    pub fn new_face<P>(&self, path: P, face_index: FT_Long) -> Fallible<Face>
-    where
-        P: AsRef<std::path::Path>,
-    {
-        let mut face = ptr::null_mut();
-        let path = path.as_ref();
-
-        let data = std::fs::read(path)?;
-        log::trace!("Loading {} for freetype!", path.display());
-
-        let res = unsafe {
-            FT_New_Memory_Face(
-                self.lib,
-                data.as_ptr(),
-                data.len() as _,
-                face_index,
-                &mut face as *mut _,
-            )
-        };
-        Ok(Face {
-            face: ft_result(res, face).with_context(|_| {
-                format!("FT_New_Memory_Face for {} index {}", path.display(), face_index)
-            })?,
-            _bytes: data,
-            size: None,
-        })
     }
 
     pub fn new_face_from_slice(&self, data: &[u8], face_index: FT_Long) -> Fallible<Face> {

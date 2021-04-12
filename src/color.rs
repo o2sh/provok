@@ -17,25 +17,6 @@ pub struct ColorPalette {
     pub selection_bg: RgbColor,
 }
 
-impl ColorPalette {
-    pub fn resolve_fg(&self, color: ColorAttribute) -> RgbColor {
-        match color {
-            ColorAttribute::Default => self.foreground,
-            ColorAttribute::PaletteIndex(idx) => self.colors.0[idx as usize],
-            ColorAttribute::TrueColorWithPaletteFallback(color, _)
-            | ColorAttribute::TrueColorWithDefaultFallback(color) => color,
-        }
-    }
-    pub fn resolve_bg(&self, color: ColorAttribute) -> RgbColor {
-        match color {
-            ColorAttribute::Default => self.background,
-            ColorAttribute::PaletteIndex(idx) => self.colors.0[idx as usize],
-            ColorAttribute::TrueColorWithPaletteFallback(color, _)
-            | ColorAttribute::TrueColorWithDefaultFallback(color) => color,
-        }
-    }
-}
-
 impl Default for ColorPalette {
     fn default() -> ColorPalette {
         let mut colors = [RgbColor::default(); 256];
