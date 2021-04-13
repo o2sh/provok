@@ -99,7 +99,11 @@ impl RenderState {
         let mut indices = Vec::new();
 
         let num_cols = render_metrics.win_size.width as usize / cell_width as usize;
-        let y_pos = -cell_height;
+        println!(
+            "width: {}, cell_width: {}, cell_height: {}",
+            render_metrics.win_size.width, cell_width, cell_height
+        );
+        let y_pos = -cell_height / 2.;
         for x in 0..num_cols {
             let x_pos = (render_metrics.win_size.width as f32 / -2.0) + (x as f32 * cell_width);
 

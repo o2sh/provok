@@ -11,7 +11,7 @@ lazy_static! {
     static ref LANG_TO_FONT: HashMap<Language, &'static str> = {
         let mut m = HashMap::new();
         m.insert(Language::Arabic, "Noto Sans Arabic");
-        m.insert(Language::Chinese, "Noto Sans JP");
+        m.insert(Language::Chinese, "Noto Sans SC");
         m.insert(Language::Japanese, "Noto Sans JP");
         m.insert(Language::Thai, "Noto Sans Thai");
         m

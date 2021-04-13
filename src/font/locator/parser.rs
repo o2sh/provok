@@ -1,7 +1,7 @@
 use crate::font::locator::unicode_column_width;
 use crate::font::locator::FontDataHandle;
+pub use crate::font::shaper::FontMetrics;
 use crate::font::shaper::GlyphInfo;
-pub use crate::font::shaper::{FallbackIdx, FontMetrics};
 use crate::input::FontAttributes;
 use crate::utils::PixelLength;
 use allsorts::binary::read::{ReadScope, ReadScopeOwned};
@@ -510,6 +510,8 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>) ->
         font!("../../../assets/fonts/noto/NotoSansJP-Regular.otf"),
         font!("../../../assets/fonts/noto/NotoSansThai-Bold.ttf"),
         font!("../../../assets/fonts/noto/NotoSansThai-Regular.ttf"),
+        font!("../../../assets/fonts/noto/NotoSansSC-Bold.otf"),
+        font!("../../../assets/fonts/noto/NotoSansSC-Regular.otf"),
     ] {
         let scope = allsorts::binary::read::ReadScope::new(&data);
         let file = scope.read::<OpenTypeFile>()?;

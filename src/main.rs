@@ -167,7 +167,12 @@ fn render_text(
     let line = Line::from_text(&word.text);
     let cluster = line.cluster().unwrap();
     let start_pos = ((vertices.len() / VERTICES_PER_CELL) - line.len()) / 2;
-    println!("line.len(): {}, vertices.len(): {}", line.len(), vertices.len());
+    println!(
+        "word: {}, line.len(): {}, vertices.len(): {}",
+        &word.text,
+        line.len(),
+        vertices.len()
+    );
     let fg_color = rgbcolor_to_color(word.style.fg_color);
 
     let font = fontconfig.resolve_font(&word.style)?;
@@ -187,14 +192,12 @@ fn render_text(
             .select_sprite(word.style.strikethrough, word.style.underline)
             .texture_coords();
 
-        println!("before, cell_idx: {}", cell_idx);
         for glyph_idx in 0..info.num_cells as usize {
             let cell_idx = start_pos + cell_idx + glyph_idx;
             if cell_idx >= num_cols {
                 break;
             }
 
-            println!("cell_idx: {}", cell_idx);
             let texture = glyph.texture.as_ref().unwrap_or(&render_state.util_sprites.white_space);
 
             let slice = SpriteSlice {
@@ -221,10 +224,10 @@ fn render_text(
             }
             quad.set_texture(texture_rect);
             quad.set_underline(underline_tex_rect);
+            println!("left: {}, top: {}, right: {}, bottom: {}", left, top, right, bottom);
             quad.set_texture_adjust(left, top, right, bottom);
             quad.set_has_color(glyph.has_color);
         }
-        println!("after");
     }
     Ok(())
 }

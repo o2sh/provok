@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 pub mod ftwrap;
+pub mod hbwrap;
 pub mod locator;
 pub mod rasterizer;
 pub mod shaper;
@@ -12,7 +13,7 @@ pub mod shaper;
 use crate::font::locator::parser;
 use crate::font::rasterizer::FontRasterizer;
 pub use crate::font::rasterizer::RasterizedGlyph;
-pub use crate::font::shaper::{FallbackIdx, FontMetrics, GlyphInfo};
+pub use crate::font::shaper::{FontMetrics, GlyphInfo};
 use crate::font::shaper::{FontShaper, FontShaperSelection};
 
 use crate::input::{Config, TextStyle};
@@ -63,7 +64,7 @@ impl FontConfiguration {
             return Ok(Rc::clone(entry));
         }
         let font_data_handle = parser::ParsedFont::load_built_in_font(&style.font_attributes)?;
-        let shaper = shaper::new_shaper(FontShaperSelection::Allsorts, &font_data_handle)?;
+        let shaper = shaper::new_shaper(FontShaperSelection::Harfbuzz, &font_data_handle)?;
         let rasterizer = rasterizer::new_rasterizer(&font_data_handle)?;
         let font_size = self.config.font_size * *self.font_scale.borrow();
         let dpi = *self.dpi_scale.borrow() as u32 * self.config.dpi as u32;

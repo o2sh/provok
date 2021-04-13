@@ -116,6 +116,7 @@ pub struct SpriteSlice {
 impl SpriteSlice {
     pub fn pixel_rect<T: Texture2d>(&self, sprite: &Sprite<T>) -> Rect {
         let width = self.slice_width(sprite) as isize;
+        println!("sprite_width: {}", width);
         let left = self.left_pix(sprite) as isize;
 
         Rect::new(
@@ -143,7 +144,10 @@ impl SpriteSlice {
 
     pub fn slice_width<T: Texture2d>(&self, sprite: &Sprite<T>) -> f32 {
         let width = sprite.coords.size.width as f32 * self.scale;
-
+        println!(
+            "sprite.coords.size.width: {}, num_cells: {}, cell_idx: {}, self.left_offset: {}",
+            sprite.coords.size.width, self.num_cells, self.cell_idx, self.left_offset
+        );
         if self.num_cells == 1 {
             width
         } else if self.cell_idx == 0 {
