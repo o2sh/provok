@@ -81,16 +81,21 @@ pub struct RenderState {
 }
 
 impl RenderState {
-    pub fn new(display: &Display, render_metrics: &RenderMetrics) -> Fallible<Self> {
+    pub fn new(
+        display: &Display,
+        render_metrics: &RenderMetrics,
+        num_cells: &usize,
+    ) -> Fallible<Self> {
         let mut glyph_cache = GlyphCache::new(&display, ATLAS_SIZE)?;
         let util_sprites = UtilSprites::new(&mut glyph_cache, render_metrics)?;
         let (glyph_vertex_buffer, glyph_index_buffer) =
-            Self::compute_glyph_vertices(&render_metrics, display)?;
+            Self::compute_glyph_vertices(&render_metrics, *num_cells, display)?;
         Ok(Self { glyph_cache, util_sprites, glyph_vertex_buffer, glyph_index_buffer })
     }
 
     pub fn compute_glyph_vertices(
         render_metrics: &RenderMetrics,
+        num_cells: usize,
         display: &Display,
     ) -> Fallible<(VertexBuffer<Vertex>, IndexBuffer<u32>)> {
         let cell_width = render_metrics.cell_size.width as f32;
@@ -98,14 +103,13 @@ impl RenderState {
         let mut verts = Vec::new();
         let mut indices = Vec::new();
 
-        let num_cols = render_metrics.win_size.width as usize / cell_width as usize;
         println!(
             "width: {}, cell_width: {}, cell_height: {}",
             render_metrics.win_size.width, cell_width, cell_height
         );
-        let y_pos = -cell_height / 2.;
-        for x in 0..num_cols {
-            let x_pos = (render_metrics.win_size.width as f32 / -2.0) + (x as f32 * cell_width);
+        let y_pos = cell_height / -2.0;
+        for x in 0..num_cells {
+            let x_pos = (num_cells as f32 * cell_width / -2.0) + (x as f32 * cell_width);
 
             let idx = verts.len() as u32;
             verts.push(Vertex { position: (x_pos, y_pos), ..Default::default() });

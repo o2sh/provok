@@ -38,7 +38,7 @@ use color::rgbcolor_to_color;
 use font::FontConfiguration;
 use input::{Input, Word};
 use line::Line;
-use quad::{Quad, VERTICES_PER_CELL};
+use quad::Quad;
 use renderstate::{compile_shaders, RenderMetrics, RenderState};
 use utils::PixelLength;
 
@@ -81,7 +81,9 @@ fn run(input_path: &str) -> Fallible<()> {
 
         let render_metrics =
             RenderMetrics::new(&fontconfig, &input.words[i].style, window_width, window_height);
-        let mut render_state = RenderState::new(&display, &render_metrics).unwrap();
+        let mut render_state =
+            RenderState::new(&display, &render_metrics, &input.words[i].text.chars().count())
+                .unwrap();
         paint(
             &mut render_state,
             &render_metrics,
@@ -166,7 +168,6 @@ fn render_text(
         .map();
     let line = Line::from_text(&word.text);
     let cluster = line.cluster().unwrap();
-    let start_pos = ((vertices.len() / VERTICES_PER_CELL) - line.len()) / 2;
     println!(
         "word: {}, line.len(): {}, vertices.len(): {}",
         &word.text,
@@ -193,7 +194,7 @@ fn render_text(
             .texture_coords();
 
         for glyph_idx in 0..info.num_cells as usize {
-            let cell_idx = start_pos + cell_idx + glyph_idx;
+            let cell_idx = cell_idx + glyph_idx;
             if cell_idx >= num_cols {
                 break;
             }

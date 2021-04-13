@@ -9,36 +9,10 @@
             "bold": true
         },
         {
-            "text": "ليونيكود",
-            "canvas_color": "#65A8EC",
-            "fg_color": "#000000",
-            "bold": true
-        },
-        {
-            "text": "无效的",
-            "canvas_color": "#D53071",
-            "fg_color": "#008165",
-            "bg_color": "#E03427",
-            "bold": true
-        },
-        {
-            "text": "ボイド",
-            "canvas_color": "#006E3F",
-            "fg_color": "#D70B17",
-            "bold": true
-        },
-        {
             "text": "нулевой",
             "canvas_color": "#E70012",
             "fg_color": "#000000",
             "bold": true
-        },
-        {
-            "text": "โมฆะ",
-            "canvas_color": "#E9DE4D",
-            "fg_color": "#000000",
-            "bold": true,
-            "underline": true
         }
     ]
 }
