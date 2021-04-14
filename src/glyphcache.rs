@@ -74,9 +74,8 @@ impl<T: Texture2d> GlyphCache<T> {
         let glyph = font.rasterize_glyph(info.glyph_pos)?;
         let (cell_width, cell_height) = (metrics.cell_width, metrics.cell_height);
 
-        let scale = if (info.x_advance / f64::from(info.num_cells)).get().floor() > cell_width.get()
-        {
-            f64::from(info.num_cells) * (cell_width / info.x_advance).get()
+        let scale = if (info.x_advance).get().floor() > cell_width.get() {
+            (cell_width / info.x_advance).get()
         } else if PixelLength::new(glyph.height as f64) > cell_height {
             cell_height.get() / glyph.height as f64
         } else {

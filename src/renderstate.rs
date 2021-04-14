@@ -103,10 +103,6 @@ impl RenderState {
         let mut verts = Vec::new();
         let mut indices = Vec::new();
 
-        println!(
-            "width: {}, cell_width: {}, cell_height: {}",
-            render_metrics.win_size.width, cell_width, cell_height
-        );
         let y_pos = cell_height / -2.0;
         for x in 0..num_cells {
             let x_pos = (num_cells as f32 * cell_width / -2.0) + (x as f32 * cell_width);

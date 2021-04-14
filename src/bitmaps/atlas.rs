@@ -107,7 +107,6 @@ where
 
 pub struct SpriteSlice {
     pub cell_idx: usize,
-    pub num_cells: usize,
     pub cell_width: usize,
     pub scale: f32,
     pub left_offset: f32,
@@ -116,46 +115,15 @@ pub struct SpriteSlice {
 impl SpriteSlice {
     pub fn pixel_rect<T: Texture2d>(&self, sprite: &Sprite<T>) -> Rect {
         let width = self.slice_width(sprite) as isize;
-        println!("sprite_width: {}", width);
-        let left = self.left_pix(sprite) as isize;
 
         Rect::new(
-            Point::new(sprite.coords.origin.x + left, sprite.coords.origin.y),
+            Point::new(sprite.coords.origin.x, sprite.coords.origin.y),
             Size::new(width, sprite.coords.size.height),
         )
     }
 
-    pub fn left_pix<T: Texture2d>(&self, sprite: &Sprite<T>) -> f32 {
-        let width = sprite.coords.size.width as f32 * self.scale;
-        if self.num_cells == 1 || self.cell_idx == 0 {
-            0.0
-        } else {
-            let cell_0 = width.min((self.cell_width as f32) - self.left_offset);
-
-            if self.cell_idx == self.num_cells - 1 {
-                let middle = self.cell_width * (self.num_cells - 2);
-                cell_0 + middle as f32
-            } else {
-                let prev = self.cell_width * self.cell_idx;
-                cell_0 + prev as f32
-            }
-        }
-    }
-
     pub fn slice_width<T: Texture2d>(&self, sprite: &Sprite<T>) -> f32 {
         let width = sprite.coords.size.width as f32 * self.scale;
-        println!(
-            "sprite.coords.size.width: {}, num_cells: {}, cell_idx: {}, self.left_offset: {}",
-            sprite.coords.size.width, self.num_cells, self.cell_idx, self.left_offset
-        );
-        if self.num_cells == 1 {
-            width
-        } else if self.cell_idx == 0 {
-            width.min((self.cell_width as f32) - self.left_offset)
-        } else if self.cell_idx == self.num_cells - 1 {
-            width - self.left_pix(sprite)
-        } else {
-            self.cell_width as f32
-        }
+        width
     }
 }

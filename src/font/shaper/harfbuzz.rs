@@ -1,6 +1,5 @@
 use crate::font::ftwrap;
 use crate::font::hbwrap as harfbuzz;
-use crate::font::locator::unicode_column_width;
 use crate::font::locator::FontDataHandle;
 use crate::font::shaper::{FontMetrics, FontShaper, GlyphInfo};
 use crate::utils::PixelLength;
@@ -27,11 +26,9 @@ impl<'a> std::fmt::Debug for Info<'a> {
 }
 
 fn make_glyphinfo(text: &str, info: &Info) -> GlyphInfo {
-    let num_cells = unicode_column_width(text) as u8;
     GlyphInfo {
         #[cfg(debug_assertions)]
         text: text.into(),
-        num_cells,
         glyph_pos: info.codepoint,
         cluster: info.cluster as u32,
         x_advance: PixelLength::new(f64::from(info.pos.x_advance) / 64.0),
@@ -210,7 +207,7 @@ impl FontShaper for HarfbuzzShaper {
 
         *font_metrics = Some(metrics.clone());
 
-        println!("metrics: {:?}", metrics);
+        log::warn!("metrics: {:?}", metrics);
 
         Ok(metrics)
     }

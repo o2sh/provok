@@ -2,7 +2,6 @@ use crate::font::locator::FontDataHandle;
 use crate::utils::PixelLength;
 use failure::Fallible;
 
-pub mod allsorts;
 pub mod harfbuzz;
 
 #[derive(Clone, Debug)]
@@ -10,7 +9,6 @@ pub struct GlyphInfo {
     #[cfg(debug_assertions)]
     pub text: String,
     pub cluster: u32,
-    pub num_cells: u8,
     pub glyph_pos: u32,
     pub x_advance: PixelLength,
     pub y_advance: PixelLength,
@@ -34,7 +32,6 @@ pub trait FontShaper {
 
 #[allow(dead_code)]
 pub enum FontShaperSelection {
-    Allsorts,
     Harfbuzz,
 }
 
@@ -44,6 +41,5 @@ pub fn new_shaper(
 ) -> Fallible<Box<dyn FontShaper>> {
     match shaper {
         FontShaperSelection::Harfbuzz => Ok(Box::new(harfbuzz::HarfbuzzShaper::new(handle)?)),
-        FontShaperSelection::Allsorts => Ok(Box::new(allsorts::AllsortsShaper::new(handle)?)),
     }
 }
