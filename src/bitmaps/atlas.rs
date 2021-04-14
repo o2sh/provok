@@ -105,25 +105,11 @@ where
     }
 }
 
-pub struct SpriteSlice {
-    pub cell_idx: usize,
-    pub cell_width: usize,
-    pub scale: f32,
-    pub left_offset: f32,
-}
+pub fn pixel_rect<T: Texture2d>(scale: f32, sprite: &Sprite<T>) -> Rect {
+    let width = sprite.coords.size.width as f32 * scale;
 
-impl SpriteSlice {
-    pub fn pixel_rect<T: Texture2d>(&self, sprite: &Sprite<T>) -> Rect {
-        let width = self.slice_width(sprite) as isize;
-
-        Rect::new(
-            Point::new(sprite.coords.origin.x, sprite.coords.origin.y),
-            Size::new(width, sprite.coords.size.height),
-        )
-    }
-
-    pub fn slice_width<T: Texture2d>(&self, sprite: &Sprite<T>) -> f32 {
-        let width = sprite.coords.size.width as f32 * self.scale;
-        width
-    }
+    Rect::new(
+        Point::new(sprite.coords.origin.x, sprite.coords.origin.y),
+        Size::new(width as isize, sprite.coords.size.height),
+    )
 }

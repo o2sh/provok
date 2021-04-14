@@ -24,13 +24,13 @@ mod color;
 mod font;
 mod glyphcache;
 mod input;
+mod language;
 mod quad;
 mod renderstate;
 mod utils;
 mod utilsprites;
 
-use bitmaps::atlas::SpriteSlice;
-use bitmaps::Texture2d;
+use bitmaps::{atlas::pixel_rect, Texture2d};
 use color::rgbcolor_to_color;
 use font::FontConfiguration;
 use input::{Input, Word};
@@ -165,7 +165,7 @@ fn render_text(
     let fg_color = rgbcolor_to_color(word.style.fg_color);
 
     let font = fontconfig.resolve_font(&word.style)?;
-    let glyph_info = font.shape(&word.text)?;
+    let glyph_info = font.shape(&word)?;
 
     for (cell_idx, info) in glyph_info.iter().enumerate() {
         let glyph = render_state.glyph_cache.cached_glyph(&font, info, &word.style)?;
@@ -186,14 +186,7 @@ fn render_text(
 
         let texture = glyph.texture.as_ref().unwrap_or(&render_state.util_sprites.white_space);
 
-        let slice = SpriteSlice {
-            cell_idx: 0,
-            cell_width: render_metrics.cell_size.width as usize,
-            scale: glyph.scale as f32,
-            left_offset: left,
-        };
-
-        let pixel_rect = slice.pixel_rect(texture);
+        let pixel_rect = pixel_rect(glyph.scale as f32, texture);
         let texture_rect = texture.texture.to_texture_coords(pixel_rect);
         let bottom = (pixel_rect.size.height as f32 * glyph.scale as f32) + top
             - render_metrics.cell_size.height as f32;

@@ -1,27 +1,8 @@
 use crate::color::RgbColor;
+use crate::language;
 use failure::Fallible;
-use lazy_static::lazy_static;
 use lingua::{Language, LanguageDetector, LanguageDetectorBuilder};
 use serde::Deserialize;
-use std::collections::HashMap;
-
-const DEFAULT_FONT_FAMILY: &str = "JetBrains Mono";
-
-lazy_static! {
-    static ref LANG_TO_FONT: HashMap<Language, &'static str> = {
-        let mut m = HashMap::new();
-        m.insert(Language::Arabic, "Noto Sans Arabic");
-        m.insert(Language::Chinese, "Noto Sans SC");
-        m.insert(Language::Japanese, "Noto Sans JP");
-        m.insert(Language::Thai, "Noto Sans Thai");
-        m
-    };
-}
-
-pub enum Direction {
-    LTR,
-    RTL,
-}
 
 #[derive(Debug, Deserialize, Clone)]
 struct InputJson {
@@ -55,7 +36,9 @@ pub struct Config {
 pub struct Word {
     pub text: String,
     pub canvas_color: RgbColor,
-    pub direction: Direction,
+    pub hb_direction: u32,
+    pub hb_script: u32,
+    pub hb_lang: String,
     pub style: TextStyle,
 }
 
@@ -79,8 +62,14 @@ pub struct FontAttributes {
 
 impl Input {
     pub fn new(path: &str) -> Fallible<Self> {
-        let languages =
-            vec![Language::Arabic, Language::Thai, Language::Chinese, Language::Japanese];
+        let languages = vec![
+            Language::English,
+            Language::Russian,
+            Language::Arabic,
+            Language::Thai,
+            Language::Chinese,
+            Language::Japanese,
+        ];
         let detector: LanguageDetector =
             LanguageDetectorBuilder::from_languages(&languages).build();
         let input_json = InputJson::parse(path)?;
@@ -92,17 +81,12 @@ impl Input {
                 None
             };
 
-            let (family, direction) =
-                if let Some(lang) = detector.detect_language_of(&word_json.text) {
-                    let direction =
-                        if lang == Language::Arabic { Direction::RTL } else { Direction::LTR };
-                    (LANG_TO_FONT[&lang], direction)
-                } else {
-                    (DEFAULT_FONT_FAMILY, Direction::LTR)
-                };
+            let lang = detector.detect_language_of(&word_json.text).unwrap();
             words.push(Word {
                 text: String::from(&word_json.text),
-                direction,
+                hb_direction: language::get_hb_direction(&lang),
+                hb_script: language::get_hb_script(&lang),
+                hb_lang: language::get_hb_lang(&lang).into(),
                 canvas_color: RgbColor::from_named_or_rgb_string(&word_json.canvas_color).unwrap(),
                 style: TextStyle {
                     fg_color: RgbColor::from_named_or_rgb_string(&word_json.fg_color).unwrap(),
@@ -110,7 +94,7 @@ impl Input {
                     underline: word_json.underline.unwrap_or(false),
                     strikethrough: word_json.strikethrough.unwrap_or(false),
                     font_attributes: FontAttributes {
-                        family: family.into(),
+                        family: language::get_font(&lang).into(),
                         bold: word_json.bold.unwrap_or(false),
                         italic: word_json.italic.unwrap_or(false),
                     },

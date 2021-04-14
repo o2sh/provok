@@ -27,7 +27,6 @@ impl<'a> std::fmt::Debug for Info<'a> {
 
 fn make_glyphinfo(text: &str, info: &Info) -> GlyphInfo {
     GlyphInfo {
-        #[cfg(debug_assertions)]
         text: text.into(),
         glyph_pos: info.codepoint,
         cluster: info.cluster as u32,
@@ -79,16 +78,24 @@ impl HarfbuzzShaper {
         Ok(RefMut::map(opt_pair, |opt_pair| opt_pair.as_mut().unwrap()))
     }
 
-    fn do_shape(&self, s: &str, font_size: f64, dpi: u32) -> Fallible<Vec<GlyphInfo>> {
+    fn do_shape(
+        &self,
+        s: &str,
+        font_size: f64,
+        dpi: u32,
+        hb_script: u32,
+        hb_direction: u32,
+        hb_lang: &str,
+    ) -> Fallible<Vec<GlyphInfo>> {
         let features = vec![
             harfbuzz::feature_from_string("kern")?,
             harfbuzz::feature_from_string("liga")?,
             harfbuzz::feature_from_string("clig")?,
         ];
         let mut buf = harfbuzz::Buffer::new()?;
-        buf.set_script(harfbuzz::HB_SCRIPT_LATIN);
-        buf.set_direction(harfbuzz::HB_DIRECTION_LTR);
-        buf.set_language(harfbuzz::language_from_string("en")?);
+        buf.set_script(hb_script);
+        buf.set_direction(hb_direction);
+        buf.set_language(harfbuzz::language_from_string(hb_lang)?);
         buf.add_str(s);
         buf.set_cluster_level(harfbuzz::HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 
@@ -177,8 +184,16 @@ impl HarfbuzzShaper {
 }
 
 impl FontShaper for HarfbuzzShaper {
-    fn shape(&self, text: &str, size: f64, dpi: u32) -> Fallible<Vec<GlyphInfo>> {
-        let result = self.do_shape(text, size, dpi);
+    fn shape(
+        &self,
+        text: &str,
+        size: f64,
+        dpi: u32,
+        hb_script: u32,
+        hb_direction: u32,
+        hb_lang: &str,
+    ) -> Fallible<Vec<GlyphInfo>> {
+        let result = self.do_shape(text, size, dpi, hb_script, hb_direction, hb_lang);
         result
     }
 
