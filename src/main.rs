@@ -69,12 +69,6 @@ fn run(input_path: &str) -> Fallible<()> {
         *control_flow = ControlFlow::WaitUntil(next_frame_time);
         let mut target = display.draw();
 
-        if i == input.words.len() - 1 {
-            i = 0;
-        } else {
-            i += 1;
-        }
-
         let render_metrics =
             RenderMetrics::new(&fontconfig, &input.words[i].style, window_width, window_height);
         let mut render_state =
@@ -90,6 +84,12 @@ fn run(input_path: &str) -> Fallible<()> {
         )
         .unwrap();
         target.finish().unwrap();
+
+        i += 1;
+
+        if i == input.words.len() {
+            i = 0;
+        }
     });
 }
 

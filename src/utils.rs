@@ -14,6 +14,7 @@ pub struct Dimensions {
     pub pixel_height: usize,
     pub dpi: usize,
 }
+
 pub struct PixelUnit;
 pub type PixelLength = euclid::Length<f64, PixelUnit>;
 pub type IntPixelLength = isize;

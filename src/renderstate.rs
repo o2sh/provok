@@ -8,7 +8,7 @@ use failure::Fallible;
 use glium::texture::SrgbTexture2d;
 use glium::{Display, IndexBuffer, VertexBuffer};
 
-const ATLAS_SIZE: usize = 4096;
+const ATLAS_SIZE: usize = 8192;
 
 static VERTEX_SHADER: &str =
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/vertex.glsl"));
