@@ -23,7 +23,7 @@ fn render_mode_to_load_target(render_mode: FT_Render_Mode) -> u32 {
 pub fn compute_load_flags() -> (i32, FT_Render_Mode) {
     let render = FT_Render_Mode::FT_RENDER_MODE_LCD;
 
-    let flags = render_mode_to_load_target(FT_Render_Mode::FT_RENDER_MODE_LCD);
+    let flags = render_mode_to_load_target(render);
 
     let flags = flags | FT_LOAD_COLOR;
 

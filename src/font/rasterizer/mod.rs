@@ -1,6 +1,6 @@
 use crate::font::locator::FontDataHandle;
 use crate::utils::PixelLength;
-use failure::{format_err, Error, Fallible};
+use failure::Fallible;
 use serde::Deserialize;
 
 pub mod freetype;
@@ -29,26 +29,6 @@ impl Default for FontRasterizerSelection {
     }
 }
 
-impl FontRasterizerSelection {
-    pub fn variants() -> Vec<&'static str> {
-        vec!["FreeType"]
-    }
-}
-
 pub fn new_rasterizer(handle: &FontDataHandle) -> Fallible<Box<dyn FontRasterizer>> {
     Ok(Box::new(freetype::FreeTypeRasterizer::from_locator(handle)?))
-}
-
-impl std::str::FromStr for FontRasterizerSelection {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_ref() {
-            "freetype" => Ok(Self::FreeType),
-            _ => Err(format_err!(
-                "{} is not a valid FontRasterizerSelection variant, possible values are {:?}",
-                s,
-                Self::variants()
-            )),
-        }
-    }
 }

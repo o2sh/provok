@@ -32,7 +32,7 @@ macro_rules! languages {
 
 languages! {
     { English, "JetBrains Mono", "en", HB_SCRIPT_LATIN, HB_DIRECTION_LTR },
-    { Arabic, "Noto Sans Arabic", "ar", HB_SCRIPT_ARABIC, HB_DIRECTION_RTL },
+    { Arabic, "Amiri", "ar", HB_SCRIPT_ARABIC, HB_DIRECTION_RTL },
     { Chinese, "Noto Sans SC", "ch", HB_SCRIPT_HAN, HB_DIRECTION_LTR },
     { Japanese, "Noto Sans JP", "jp", HB_SCRIPT_KATAKANA, HB_DIRECTION_LTR },
     { Russian, "JetBrains Mono", "ru", HB_SCRIPT_LATIN, HB_DIRECTION_LTR },

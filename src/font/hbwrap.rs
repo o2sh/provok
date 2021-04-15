@@ -5,7 +5,6 @@ use harfbuzz_sys as harfbuzz;
 
 use failure::{ensure, Error};
 use std::mem;
-use std::ptr;
 use std::slice;
 
 extern "C" {
@@ -60,14 +59,8 @@ impl Font {
         }
     }
 
-    pub fn shape(&mut self, buf: &mut Buffer, features: Option<&[hb_feature_t]>) {
-        unsafe {
-            if let Some(features) = features {
-                hb_shape(self.font, buf.buf, features.as_ptr(), features.len() as u32)
-            } else {
-                hb_shape(self.font, buf.buf, ptr::null(), 0)
-            }
-        }
+    pub fn shape(&mut self, buf: &mut Buffer, features: &[hb_feature_t]) {
+        unsafe { hb_shape(self.font, buf.buf, features.as_ptr(), features.len() as u32) }
     }
 }
 

@@ -63,8 +63,6 @@ impl HarfbuzzShaper {
     fn do_shape(
         &self,
         s: &str,
-        font_size: f64,
-        dpi: u32,
         hb_script: u32,
         hb_direction: u32,
         hb_lang: &str,
@@ -81,16 +79,14 @@ impl HarfbuzzShaper {
         buf.add_str(s);
 
         let mut pair = self.load_font_pair()?;
-        pair.face.set_font_size(font_size, dpi)?;
-        pair.font.shape(&mut buf, Some(features.as_slice()));
+        pair.font.shape(&mut buf, features.as_slice());
 
         let hb_infos = buf.glyph_infos();
         let positions = buf.glyph_positions();
 
         let mut cluster = Vec::new();
 
-        let mut info_iter = hb_infos.iter().enumerate().peekable();
-        while let Some((i, info)) = info_iter.next() {
+        for (i, info) in hb_infos.iter().enumerate() {
             let info = Info {
                 cluster: info.cluster as usize,
                 codepoint: info.codepoint,
@@ -108,13 +104,11 @@ impl FontShaper for HarfbuzzShaper {
     fn shape(
         &self,
         text: &str,
-        size: f64,
-        dpi: u32,
         hb_script: u32,
         hb_direction: u32,
         hb_lang: &str,
     ) -> Fallible<Vec<GlyphInfo>> {
-        let result = self.do_shape(text, size, dpi, hb_script, hb_direction, hb_lang);
+        let result = self.do_shape(text, hb_script, hb_direction, hb_lang);
         result
     }
 

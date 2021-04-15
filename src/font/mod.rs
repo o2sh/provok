@@ -32,14 +32,7 @@ impl LoadedFont {
     }
 
     pub fn shape(&self, word: &Word) -> Fallible<Vec<GlyphInfo>> {
-        self.shaper.shape(
-            &word.text,
-            self.font_size,
-            self.dpi,
-            word.hb_script,
-            word.hb_direction,
-            &word.hb_lang,
-        )
+        self.shaper.shape(&word.text, word.hb_script, word.hb_direction, &word.hb_lang)
     }
 
     pub fn rasterize_glyph(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {

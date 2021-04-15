@@ -11,8 +11,7 @@
         {
             "text": "ليونيكود",
             "canvas_color": "#65A8EC",
-            "fg_color": "#000000",
-            "bold": true
+            "fg_color": "#000000"
         },
         {
             "text": "无效的",

@@ -6,7 +6,6 @@ pub mod harfbuzz;
 
 #[derive(Clone, Debug)]
 pub struct GlyphInfo {
-    #[cfg(debug_assertions)]
     pub cluster: u32,
     pub glyph_pos: u32,
     pub x_advance: PixelLength,
@@ -28,8 +27,6 @@ pub trait FontShaper {
     fn shape(
         &self,
         text: &str,
-        size: f64,
-        dpi: u32,
         hb_script: u32,
         hb_direction: u32,
         hb_lang: &str,
@@ -38,7 +35,6 @@ pub trait FontShaper {
     fn metrics(&self, size: f64, dpi: u32) -> Fallible<FontMetrics>;
 }
 
-#[allow(dead_code)]
 pub enum FontShaperSelection {
     Harfbuzz,
 }
