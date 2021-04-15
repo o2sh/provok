@@ -90,19 +90,6 @@ impl Buffer {
         Ok(Buffer { buf })
     }
 
-    #[allow(dead_code)]
-    pub fn reset(&mut self) {
-        unsafe {
-            hb_buffer_reset(self.buf);
-        }
-    }
-
-    pub fn set_cluster_level(&mut self, level: hb_buffer_cluster_level_t) {
-        unsafe {
-            hb_buffer_set_cluster_level(self.buf, level);
-        }
-    }
-
     pub fn set_direction(&mut self, direction: hb_direction_t) {
         unsafe {
             hb_buffer_set_direction(self.buf, direction);
@@ -118,13 +105,6 @@ impl Buffer {
     pub fn set_language(&mut self, lang: hb_language_t) {
         unsafe {
             hb_buffer_set_language(self.buf, lang);
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn add(&mut self, codepoint: hb_codepoint_t, cluster: u32) {
-        unsafe {
-            hb_buffer_add(self.buf, codepoint, cluster);
         }
     }
 

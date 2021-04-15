@@ -7,7 +7,6 @@ pub mod harfbuzz;
 #[derive(Clone, Debug)]
 pub struct GlyphInfo {
     #[cfg(debug_assertions)]
-    pub text: String,
     pub cluster: u32,
     pub glyph_pos: u32,
     pub x_advance: PixelLength,

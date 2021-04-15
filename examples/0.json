@@ -9,6 +9,12 @@
             "bold": true
         },
         {
+            "text": "ليونيكود",
+            "canvas_color": "#65A8EC",
+            "fg_color": "#000000",
+            "bold": true
+        },
+        {
             "text": "无效的",
             "canvas_color": "#D53071",
             "fg_color": "#008165",
