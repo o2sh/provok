@@ -204,7 +204,7 @@ fn render_text(
         }
         quad.set_texture(texture_rect);
         quad.set_underline(underline_tex_rect);
-        quad.set_texture_adjust(left, top, 0.0, bottom);
+        quad.set_texture_adjust(left, top, right, bottom);
     }
     Ok(())
 }

@@ -97,8 +97,6 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>) ->
         font!("../../../assets/fonts/noto/NotoSans-BoldItalic.ttf"),
         font!("../../../assets/fonts/noto/NotoSans-Italic.ttf"),
         font!("../../../assets/fonts/noto/NotoSans-Regular.ttf"),
-        font!("../../../assets/fonts/noto/NotoSerifCJKjp-Bold.otf"),
-        font!("../../../assets/fonts/noto/NotoSerifCJKjp-Regular.otf"),
     ] {
         let scope = ReadScope::new(&data);
         let file = scope.read::<FontData<'_>>()?;
