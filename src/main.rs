@@ -168,13 +168,8 @@ fn render_text(
     let glyph_info = font.shape(&word)?;
 
     for (cell_idx, info) in glyph_info.iter().enumerate() {
-        let glyph = render_state.glyph_cache.cached_glyph(&font, info, &word.style)?;
+        let glyph = render_state.glyph_cache.get_glyph(&font, info, &word.style)?;
 
-        let left = (glyph.x_offset + glyph.bearing_x).get() as f32;
-        let top = ((PixelLength::new(render_metrics.cell_size.height as f64)
-            + render_metrics.descender)
-            - (glyph.y_offset + glyph.bearing_y))
-            .get() as f32;
         let underline_tex_rect = render_state
             .util_sprites
             .select_sprite(word.style.strikethrough, word.style.underline)
@@ -188,12 +183,20 @@ fn render_text(
 
         let pixel_rect = pixel_rect(glyph.scale as f32, texture);
         let texture_rect = texture.texture.to_texture_coords(pixel_rect);
+        let left = (glyph.x_offset + glyph.bearing_x).get() as f32;
+        let top = ((PixelLength::new(render_metrics.cell_size.height as f64)
+            + render_metrics.descender)
+            - (glyph.y_offset + glyph.bearing_y))
+            .get() as f32;
         let bottom = (pixel_rect.size.height as f32 * glyph.scale as f32) + top
             - render_metrics.cell_size.height as f32;
         let right = pixel_rect.size.width as f32 + left - render_metrics.cell_size.width as f32;
 
         let mut quad = Quad::for_cell(cell_idx, &mut vertices);
-
+        println!(
+            "cell_width: {}, pixel_rect.width: {}, left: {}, top: {}, right: {}, bottom: {}",
+            render_metrics.cell_size.width, pixel_rect.size.width, left, top, right, bottom
+        );
         quad.set_fg_color(fg_color);
         if let Some(bg_color) = word.style.bg_color {
             let bg_color = rgbcolor_to_color(bg_color);
@@ -201,8 +204,7 @@ fn render_text(
         }
         quad.set_texture(texture_rect);
         quad.set_underline(underline_tex_rect);
-        quad.set_texture_adjust(left, top, right, bottom);
-        quad.set_has_color(glyph.has_color);
+        quad.set_texture_adjust(left, top, 0.0, bottom);
     }
     Ok(())
 }

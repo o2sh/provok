@@ -3,7 +3,6 @@ use crate::bitmaps::{Image, Texture2d};
 use crate::font::{GlyphInfo, LoadedFont};
 use crate::input::TextStyle;
 use crate::utils::PixelLength;
-use euclid::num::Zero;
 use failure::Fallible;
 use glium::texture::SrgbTexture2d;
 use glium::Display;
@@ -17,7 +16,6 @@ pub struct GlyphKey {
 }
 
 pub struct CachedGlyph<T: Texture2d> {
-    pub has_color: bool,
     pub x_offset: PixelLength,
     pub y_offset: PixelLength,
     pub bearing_x: PixelLength,
@@ -47,7 +45,7 @@ impl GlyphCache<SrgbTexture2d> {
 }
 
 impl<T: Texture2d> GlyphCache<T> {
-    pub fn cached_glyph(
+    pub fn get_glyph(
         &mut self,
         font: &Rc<LoadedFont>,
         info: &GlyphInfo,
@@ -64,7 +62,6 @@ impl<T: Texture2d> GlyphCache<T> {
         Ok(glyph)
     }
 
-    #[allow(clippy::float_cmp)]
     fn load_glyph(
         &mut self,
         info: &GlyphInfo,
@@ -81,44 +78,25 @@ impl<T: Texture2d> GlyphCache<T> {
         } else {
             1.0f64
         };
-        let glyph = if glyph.width == 0 || glyph.height == 0 {
-            CachedGlyph {
-                has_color: glyph.has_color,
-                texture: None,
-                x_offset: info.x_offset * scale,
-                y_offset: info.y_offset * scale,
-                bearing_x: PixelLength::zero(),
-                bearing_y: PixelLength::zero(),
-                scale,
-            }
-        } else {
-            let raw_im = Image::with_rgba32(
-                glyph.width as usize,
-                glyph.height as usize,
-                4 * glyph.width as usize,
-                &glyph.data,
-            );
+        let raw_im = Image::with(
+            glyph.width as usize,
+            glyph.height as usize,
+            3 * glyph.width as usize,
+            &glyph.data,
+        );
 
-            let bearing_x = glyph.bearing_x * scale;
-            let bearing_y = glyph.bearing_y * scale;
-            let x_offset = info.x_offset * scale;
-            let y_offset = info.y_offset * scale;
+        let bearing_x = glyph.left * scale;
+        let bearing_y = glyph.top * scale;
+        let x_offset = info.x_offset * scale;
+        let y_offset = info.y_offset * scale;
 
-            let (scale, raw_im) =
-                if scale != 1.0 { (1.0, raw_im.scale_by(scale)) } else { (scale, raw_im) };
+        let (scale, raw_im) =
+            if scale != 1.0 { (1.0, raw_im.scale_by(scale)) } else { (scale, raw_im) };
 
-            let tex = self.atlas.allocate(&raw_im)?;
+        let tex = self.atlas.allocate(&raw_im)?;
 
-            CachedGlyph {
-                has_color: glyph.has_color,
-                texture: Some(tex),
-                x_offset,
-                y_offset,
-                bearing_x,
-                bearing_y,
-                scale,
-            }
-        };
+        let glyph =
+            CachedGlyph { texture: Some(tex), x_offset, y_offset, bearing_x, bearing_y, scale };
 
         Ok(Rc::new(glyph))
     }

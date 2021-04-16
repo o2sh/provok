@@ -12,9 +12,9 @@ pub mod shaper;
 
 use crate::font::locator::allsorts::load_built_in_font;
 use crate::font::rasterizer::FontRasterizer;
-pub use crate::font::rasterizer::RasterizedGlyph;
-pub use crate::font::shaper::{FontMetrics, GlyphInfo};
-use crate::font::shaper::{FontShaper, FontShaperSelection};
+pub use crate::font::rasterizer::{FontMetrics, RasterizedGlyph};
+use crate::font::shaper::FontShaper;
+pub use crate::font::shaper::GlyphInfo;
 
 use crate::input::{Config, TextStyle, Word};
 
@@ -64,11 +64,11 @@ impl FontConfiguration {
             return Ok(Rc::clone(entry));
         }
         let font_data_handle = load_built_in_font(&style.font_attributes)?;
-        let shaper = shaper::new_shaper(FontShaperSelection::Harfbuzz, &font_data_handle)?;
+        let shaper = shaper::new_shaper(&font_data_handle)?;
         let rasterizer = rasterizer::new_rasterizer(&font_data_handle)?;
         let font_size = self.config.font_size * *self.font_scale.borrow();
         let dpi = *self.dpi_scale.borrow() as u32 * self.config.dpi as u32;
-        let metrics = shaper.metrics(font_size, dpi)?;
+        let metrics = rasterizer.metrics(font_size, dpi)?;
 
         let loaded = Rc::new(LoadedFont { rasterizer, shaper, metrics, font_size, dpi });
 

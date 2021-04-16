@@ -1,5 +1,5 @@
 use crate::font::locator::FontDataHandle;
-use crate::font::rasterizer::FontRasterizer;
+use crate::font::rasterizer::{FontMetrics, FontRasterizer};
 use crate::font::{ftwrap, RasterizedGlyph};
 use crate::utils::PixelLength;
 use failure::Fallible;
@@ -8,10 +8,11 @@ use std::cell::RefCell;
 use std::slice;
 
 pub struct FreeTypeRasterizer {
-    has_color: bool,
     face: RefCell<ftwrap::Face>,
     _lib: ftwrap::Library,
+    metrics: RefCell<Option<FontMetrics>>,
 }
+
 impl FontRasterizer for FreeTypeRasterizer {
     fn rasterize_glyph(&self, glyph_pos: u32, size: f64, dpi: u32) -> Fallible<RasterizedGlyph> {
         self.face.borrow_mut().set_font_size(size, dpi)?;
@@ -26,53 +27,64 @@ impl FontRasterizer for FreeTypeRasterizer {
             slice::from_raw_parts_mut(ft_glyph.bitmap.buffer, ft_glyph.bitmap.rows as usize * pitch)
         };
 
-        let glyph = self.rasterize_lcd(pitch, ft_glyph, data);
+        let glyph = self.rasterize(pitch, ft_glyph, data);
         Ok(glyph)
+    }
+
+    fn metrics(&self, size: f64, dpi: u32) -> Fallible<FontMetrics> {
+        let mut face = self.face.borrow_mut();
+        let mut font_metrics = self.metrics.borrow_mut();
+        if let Some(metrics) = *font_metrics {
+            return Ok(metrics.clone());
+        }
+
+        let (cell_width, cell_height) = face.set_font_size(size, dpi)?;
+        let y_scale = unsafe { (*(*face.face).size).metrics.y_scale as f64 / 65536.0 };
+        let metrics = FontMetrics {
+            cell_height: PixelLength::new(cell_height),
+            cell_width: PixelLength::new(cell_width),
+            descender: PixelLength::new(
+                unsafe { (*(*face.face).size).metrics.descender as f64 } / 64.0,
+            ),
+            underline_thickness: PixelLength::new(
+                unsafe { (*face.face).underline_thickness as f64 } * y_scale / 64.,
+            ),
+            underline_position: PixelLength::new(
+                unsafe { (*face.face).underline_position as f64 } * y_scale / 64.,
+            ),
+        };
+
+        *font_metrics = Some(metrics.clone());
+
+        log::warn!("metrics: {:?}", metrics);
+
+        Ok(metrics)
     }
 }
 
 impl FreeTypeRasterizer {
-    fn rasterize_lcd(
-        &self,
-        pitch: usize,
-        ft_glyph: &FT_GlyphSlotRec_,
-        data: &[u8],
-    ) -> RasterizedGlyph {
-        let width = ft_glyph.bitmap.width as usize / 3;
+    fn rasterize(&self, pitch: usize, ft_glyph: &FT_GlyphSlotRec_, data: &[u8]) -> RasterizedGlyph {
+        let width = ft_glyph.bitmap.width as usize;
         let height = ft_glyph.bitmap.rows as usize;
-        let size = (width * height * 4) as usize;
-        let mut rgba = vec![0u8; size];
-        for y in 0..height {
-            let src_offset = y * pitch as usize;
-            let dest_offset = y * width * 4;
-            for x in 0..width {
-                let red = data[src_offset + (x * 3)];
-                let green = data[src_offset + (x * 3) + 1];
-                let blue = data[src_offset + (x * 3) + 2];
-                let alpha = red.min(green).min(blue);
-                rgba[dest_offset + (x * 4)] = red;
-                rgba[dest_offset + (x * 4) + 1] = green;
-                rgba[dest_offset + (x * 4) + 2] = blue;
-                rgba[dest_offset + (x * 4) + 3] = alpha;
-            }
-        }
 
+        let mut packed = Vec::with_capacity(height * width);
+        for i in 0..height {
+            let start = (i as usize) * pitch;
+            let stop = start + width;
+            packed.extend_from_slice(&data[start..stop]);
+        }
         RasterizedGlyph {
-            data: rgba,
+            data: packed,
             height,
-            width,
-            bearing_x: PixelLength::new(ft_glyph.bitmap_left as f64),
-            bearing_y: PixelLength::new(ft_glyph.bitmap_top as f64),
-            has_color: self.has_color,
+            width: width / 3,
+            left: PixelLength::new(ft_glyph.bitmap_left as f64),
+            top: PixelLength::new(ft_glyph.bitmap_top as f64),
         }
     }
 
-    pub fn from_locator(handle: &FontDataHandle) -> Fallible<Self> {
+    pub fn new(handle: &FontDataHandle) -> Fallible<Self> {
         let lib = ftwrap::Library::new()?;
         let face = lib.face_from_locator(handle)?;
-        let has_color = unsafe {
-            (((*face.face).face_flags as u32) & (ftwrap::FT_FACE_FLAG_COLOR as u32)) != 0
-        };
-        Ok(Self { _lib: lib, face: RefCell::new(face), has_color })
+        Ok(Self { _lib: lib, face: RefCell::new(face), metrics: RefCell::new(None) })
     }
 }

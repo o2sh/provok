@@ -4,7 +4,6 @@ precision mediump float;
 in vec2 o_tex;
 in vec4 o_fg_color;
 in vec4 o_bg_color;
-in float o_has_color;
 in vec2 o_underline;
 
 uniform mat4 projection;
@@ -49,9 +48,5 @@ void main() {
 
   } else {
     color = texture(glyph_tex, o_tex);
-    if (o_has_color == 0.0) {
-      // if it's not a color emoji, tint with the fg_color
-      color.rgb = o_fg_color.rgb;
-    }
   }
 }

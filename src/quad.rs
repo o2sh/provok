@@ -15,10 +15,9 @@ pub struct Vertex {
     pub underline: (f32, f32),
     pub bg_color: (f32, f32, f32, f32),
     pub fg_color: (f32, f32, f32, f32),
-    pub has_color: f32,
 }
 
-implement_vertex!(Vertex, position, adjust, tex, underline, bg_color, fg_color, has_color);
+implement_vertex!(Vertex, position, adjust, tex, underline, bg_color, fg_color);
 
 pub struct Quad<'a> {
     vert: &'a mut [Vertex],
@@ -43,13 +42,6 @@ impl<'a> Quad<'a> {
         self.vert[V_TOP_RIGHT].adjust = (right, top);
         self.vert[V_BOT_LEFT].adjust = (left, bottom);
         self.vert[V_BOT_RIGHT].adjust = (right, bottom);
-    }
-
-    pub fn set_has_color(&mut self, has_color: bool) {
-        let has_color = if has_color { 1. } else { 0. };
-        for v in self.vert.iter_mut() {
-            v.has_color = has_color;
-        }
     }
 
     pub fn set_fg_color(&mut self, color: Color) {

@@ -1,5 +1,4 @@
 use crate::font::locator::FontDataHandle;
-pub use crate::font::shaper::FontMetrics;
 use crate::input::FontAttributes;
 use allsorts::binary::read::ReadScope;
 use allsorts::font_data::FontData;
@@ -84,20 +83,6 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>) ->
         };
     }
     for (data, name) in &[
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-BoldItalic.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-Bold.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-ExtraBoldItalic.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-ExtraBold.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-ExtraLightItalic.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-ExtraLight.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-Italic.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-LightItalic.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-Light.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-MediumItalic.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-Medium.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-Regular.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-ThinItalic.ttf"),
-        font!("../../../assets/fonts/jet_brains/JetBrainsMono-Thin.ttf"),
         font!("../../../assets/fonts/noto/NotoSansArabic-Bold.ttf"),
         font!("../../../assets/fonts/noto/NotoSansArabic-Regular.ttf"),
         font!("../../../assets/fonts/noto/NotoSansJP-Bold.otf"),
@@ -106,7 +91,14 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, PathBuf, FontDataHandle)>) ->
         font!("../../../assets/fonts/noto/NotoSansThai-Regular.ttf"),
         font!("../../../assets/fonts/noto/NotoSansSC-Bold.otf"),
         font!("../../../assets/fonts/noto/NotoSansSC-Regular.otf"),
-        font!("../../../assets/fonts/amiri-regular.ttf"),
+        font!("../../../assets/fonts/noto/NotoSansDevanagari-Bold.ttf"),
+        font!("../../../assets/fonts/noto/NotoSansDevanagari-Regular.ttf"),
+        font!("../../../assets/fonts/noto/NotoSans-Bold.ttf"),
+        font!("../../../assets/fonts/noto/NotoSans-BoldItalic.ttf"),
+        font!("../../../assets/fonts/noto/NotoSans-Italic.ttf"),
+        font!("../../../assets/fonts/noto/NotoSans-Regular.ttf"),
+        font!("../../../assets/fonts/noto/NotoSerifCJKjp-Bold.otf"),
+        font!("../../../assets/fonts/noto/NotoSerifCJKjp-Regular.otf"),
     ] {
         let scope = ReadScope::new(&data);
         let file = scope.read::<FontData<'_>>()?;

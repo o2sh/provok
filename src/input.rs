@@ -64,6 +64,7 @@ impl Input {
     pub fn new(path: &str) -> Fallible<Self> {
         let languages = vec![
             Language::English,
+            Language::Hindi,
             Language::Russian,
             Language::Arabic,
             Language::Thai,
@@ -80,7 +81,6 @@ impl Input {
             } else {
                 None
             };
-
             let lang = detector.detect_language_of(&word_json.text).unwrap();
             words.push(Word {
                 text: String::from(&word_json.text),

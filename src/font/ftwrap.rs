@@ -17,15 +17,13 @@ fn ft_result<T>(err: FT_Error, t: T) -> Fallible<T> {
 }
 
 fn render_mode_to_load_target(render_mode: FT_Render_Mode) -> u32 {
-    (render_mode as u32) & 15 << 16
+    (render_mode as u32) << 16
 }
 
 pub fn compute_load_flags() -> (i32, FT_Render_Mode) {
     let render = FT_Render_Mode::FT_RENDER_MODE_LCD;
 
-    let flags = render_mode_to_load_target(render);
-
-    let flags = flags | FT_LOAD_COLOR;
+    let flags = render_mode_to_load_target(FT_Render_Mode::FT_RENDER_MODE_LIGHT);
 
     (flags as i32, render)
 }
@@ -59,35 +57,12 @@ impl Face {
             }
         }
 
-        log::debug!("set_char_size computing {} dpi={}", point_size, dpi);
         let size = (point_size * 64.0) as FT_F26Dot6;
 
-        let (cell_width, cell_height) = match self.set_char_size(size, size, dpi, dpi) {
+        let (cell_width, cell_height) = match self.set_char_size(size, 0, dpi, 0) {
             Ok(_) => self.cell_metrics(),
             Err(err) => {
-                let sizes = unsafe {
-                    let rec = &(*self.face);
-                    std::slice::from_raw_parts(rec.available_sizes, rec.num_fixed_sizes as usize)
-                };
-                if sizes.is_empty() {
-                    return Err(err);
-                }
-                let mut best = 0;
-                let mut best_size = 0;
-                let mut cell_width = 0;
-                let mut cell_height = 0;
-
-                for (idx, info) in sizes.iter().enumerate() {
-                    let size = best_size.max(info.height);
-                    if size > best_size {
-                        best = idx;
-                        best_size = size;
-                        cell_width = info.width;
-                        cell_height = info.height;
-                    }
-                }
-                self.select_size(best)?;
-                (f64::from(cell_width), f64::from(cell_height))
+                return Err(err);
             }
         };
 
@@ -115,10 +90,6 @@ impl Face {
             },
             (),
         )
-    }
-
-    fn select_size(&mut self, idx: usize) -> Fallible<()> {
-        ft_result(unsafe { FT_Select_Size(self.face, idx as i32) }, ())
     }
 
     pub fn load_and_render_glyph(

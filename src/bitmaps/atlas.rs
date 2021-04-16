@@ -42,7 +42,6 @@ where
 
     pub fn allocate(&mut self, im: &dyn BitmapImage) -> Result<Sprite<T>, OutOfTextureSpace> {
         let (width, height) = im.image_dimensions();
-
         let reserve_width = width + 2;
         let reserve_height = height + 2;
 
