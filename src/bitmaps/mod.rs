@@ -113,19 +113,20 @@ impl Image {
         Image { data, width, height }
     }
 
-    pub fn with(width: usize, height: usize, stride: usize, data: &[u8]) -> Image {
+    pub fn with_rgba32(width: usize, height: usize, stride: usize, data: &[u8]) -> Image {
         let mut image = Image::new(width, height);
         for y in 0..height {
             let src_offset = y * stride;
             let dest_offset = y * width * 4;
             for x in 0..width {
-                let red = data[src_offset + (x * 3) + 0];
-                let green = data[src_offset + (x * 3) + 1];
-                let blue = data[src_offset + (x * 3) + 2];
-                image.data[dest_offset + (x * 4) + 0] = red;
+                let red = data[src_offset + (x * 4) + 0];
+                let green = data[src_offset + (x * 4) + 1];
+                let blue = data[src_offset + (x * 4) + 2];
+                let alpha = data[src_offset + (x * 4) + 3];
+                image.data[dest_offset + (x * 4) + 0] = blue;
                 image.data[dest_offset + (x * 4) + 1] = green;
-                image.data[dest_offset + (x * 4) + 2] = blue;
-                image.data[dest_offset + (x * 4) + 3] = 255;
+                image.data[dest_offset + (x * 4) + 2] = red;
+                image.data[dest_offset + (x * 4) + 3] = alpha;
             }
         }
         image

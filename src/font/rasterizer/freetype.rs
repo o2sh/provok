@@ -13,7 +13,7 @@ pub struct FreeTypeRasterizer {
 }
 
 impl FontRasterizer for FreeTypeRasterizer {
-    fn rasterize_glyph(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {
+    fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {
         let (load_flags, render_mode) = ftwrap::compute_load_flags();
 
         let mut face = self.face.borrow_mut();
@@ -31,19 +31,28 @@ impl FontRasterizer for FreeTypeRasterizer {
 
 impl FreeTypeRasterizer {
     fn rasterize(&self, pitch: usize, ft_glyph: &FT_GlyphSlotRec_, data: &[u8]) -> RasterizedGlyph {
-        let width = ft_glyph.bitmap.width as usize;
+        let width = ft_glyph.bitmap.width as usize / 3;
         let height = ft_glyph.bitmap.rows as usize;
-
-        let mut packed = Vec::with_capacity(height * width);
-        for i in 0..height {
-            let start = (i as usize) * pitch;
-            let stop = start + width;
-            packed.extend_from_slice(&data[start..stop]);
+        let size = (width * height * 4) as usize;
+        let mut rgba = vec![0u8; size];
+        for y in 0..height {
+            let src_offset = y * pitch as usize;
+            let dest_offset = y * width * 4;
+            for x in 0..width {
+                let red = data[src_offset + (x * 3)];
+                let green = data[src_offset + (x * 3) + 1];
+                let blue = data[src_offset + (x * 3) + 2];
+                let alpha = red.min(green).min(blue);
+                rgba[dest_offset + (x * 4)] = red;
+                rgba[dest_offset + (x * 4) + 1] = green;
+                rgba[dest_offset + (x * 4) + 2] = blue;
+                rgba[dest_offset + (x * 4) + 3] = alpha;
+            }
         }
         RasterizedGlyph {
-            data: packed,
+            data: rgba,
             height,
-            width: width / 3,
+            width,
             left: PixelLength::new(ft_glyph.bitmap_left as f64),
             top: PixelLength::new(ft_glyph.bitmap_top as f64),
         }

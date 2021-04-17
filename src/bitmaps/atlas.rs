@@ -1,4 +1,4 @@
-use crate::bitmaps::{BitmapImage, Texture2d};
+use crate::bitmaps::{BitmapImage, Texture2d, TextureRect};
 use crate::utils::{Point, Rect, Size};
 use failure::{ensure, Fallible};
 use std::rc::Rc;
@@ -71,10 +71,13 @@ where
 
         self.texture.write(rect, im);
 
+        println!("pixel_rext: {:?}", rect);
+        let tex_coords = self.texture.to_texture_coords(rect);
+
         self.left += reserve_width;
         self.tallest = self.tallest.max(reserve_height);
 
-        Ok(Sprite { texture: Rc::clone(&self.texture), coords: rect })
+        Ok(Sprite { texture: Rc::clone(&self.texture), tex_coords, width, height })
     }
 }
 
@@ -83,7 +86,9 @@ where
     T: Texture2d,
 {
     pub texture: Rc<T>,
-    pub coords: Rect,
+    pub tex_coords: TextureRect,
+    pub width: usize,
+    pub height: usize,
 }
 
 impl<T> Clone for Sprite<T>
@@ -91,13 +96,11 @@ where
     T: Texture2d,
 {
     fn clone(&self) -> Self {
-        Self { texture: Rc::clone(&self.texture), coords: self.coords }
+        Self {
+            texture: Rc::clone(&self.texture),
+            tex_coords: self.tex_coords,
+            width: self.width,
+            height: self.height,
+        }
     }
-}
-
-pub fn pixel_rect<T: Texture2d>(sprite: &Sprite<T>) -> Rect {
-    Rect::new(
-        Point::new(sprite.coords.origin.x, sprite.coords.origin.y),
-        Size::new(sprite.coords.size.width, sprite.coords.size.height),
-    )
 }

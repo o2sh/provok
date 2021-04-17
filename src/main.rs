@@ -29,7 +29,6 @@ mod input;
 mod language;
 mod utils;
 
-use bitmaps::{atlas::pixel_rect, Texture2d};
 use font::FontConfiguration;
 use glyph_atlas::GlyphAtlas;
 use input::{Input, Word};
@@ -50,14 +49,11 @@ pub const V_BOT_RIGHT: usize = 3;
 #[derive(Copy, Clone, Default)]
 pub struct Vertex {
     pub position: (f32, f32),
-    pub adjust: (f32, f32),
     pub tex: (f32, f32),
-    pub underline: (f32, f32),
-    pub bg_color: (f32, f32, f32, f32),
     pub fg_color: (f32, f32, f32, f32),
 }
 
-implement_vertex!(Vertex, position, adjust, tex, bg_color, fg_color);
+implement_vertex!(Vertex, position, tex, fg_color);
 pub fn compile_shaders(display: &Display) -> Fallible<glium::Program> {
     let glyph_source = glium::program::ProgramCreationInput::SourceCode {
         vertex_shader: VERTEX_SHADER,
@@ -163,19 +159,6 @@ fn paint(
         &uniform! {
             projection: projection,
             glyph_tex: &*tex,
-            draw_bg_color: true
-        },
-        &draw_params,
-    )?;
-
-    frame.draw(
-        &glyph_vertex_buffer,
-        &glyph_index_buffer,
-        &program,
-        &uniform! {
-            projection: projection,
-            glyph_tex: &*tex,
-            draw_bg_color: false
         },
         &draw_params,
     )?;
@@ -195,49 +178,42 @@ fn render_text(
     let mut indices = Vec::new();
     let fg_color = color::to_tuple_rgba(word.style.fg_color);
 
-    let font = fontconfig.resolve_font(&word.style)?;
-    let glyph_info = font.shape(&word)?;
+    let font = fontconfig.get_font(&word.style)?;
+    let glyph_infos = font.shape(&word)?;
 
-    for info in &glyph_info {
-        let glyph = glyph_atlas.load_glyph(&font, info)?;
-        let texture = glyph.texture.as_ref().unwrap();
-
-        let pixel_rect = pixel_rect(texture);
-        let texture_rect = texture.texture.to_texture_coords(pixel_rect);
+    for glyph_info in &glyph_infos {
+        let rasterized_glyph = font.rasterize(glyph_info.glyph_pos)?;
+        let glyph = glyph_atlas.load_glyph(rasterized_glyph, &glyph_info)?;
 
         let x0 = x + (glyph.x_offset + glyph.bearing_x).get() as f32;
         let y0 = y + (glyph.y_offset + glyph.bearing_y).get() as f32;
 
-        let x1 = x0 + pixel_rect.size.width as f32;
-        let y1 = y0 + pixel_rect.size.height as f32;
+        let x1 = x0 + glyph.texture.width as f32;
+        let y1 = y0 + glyph.texture.height as f32;
 
-        x += info.x_advance.get() as f32;
-        y += info.y_advance.get() as f32;
-        println!("x0: {}, y0: {}, x1: {}, y1: {}", x0, y0, x1, y1);
+        x += glyph_info.x_advance.get() as f32;
+        y += glyph_info.y_advance.get() as f32;
         let idx = verts.len() as u32;
+        println!("tex_coords: {:?}", glyph.texture.tex_coords);
         verts.push(Vertex {
             position: (x0, y0),
-            tex: (texture_rect.min_x(), texture_rect.min_y()),
+            tex: (glyph.texture.tex_coords.min_x(), glyph.texture.tex_coords.min_y()),
             fg_color,
-            ..Default::default()
         });
         verts.push(Vertex {
             position: (x1, y0),
-            tex: (texture_rect.max_x(), texture_rect.min_y()),
+            tex: (glyph.texture.tex_coords.max_x(), glyph.texture.tex_coords.min_y()),
             fg_color,
-            ..Default::default()
         });
         verts.push(Vertex {
             position: (x0, y1),
-            tex: (texture_rect.min_x(), texture_rect.max_y()),
+            tex: (glyph.texture.tex_coords.min_x(), glyph.texture.tex_coords.max_y()),
             fg_color,
-            ..Default::default()
         });
         verts.push(Vertex {
             position: (x1, y1),
-            tex: (texture_rect.max_x(), texture_rect.max_y()),
+            tex: (glyph.texture.tex_coords.max_x(), glyph.texture.tex_coords.max_y()),
             fg_color,
-            ..Default::default()
         });
 
         indices.push(idx + V_TOP_LEFT as u32);
@@ -247,13 +223,6 @@ fn render_text(
         indices.push(idx + V_TOP_RIGHT as u32);
         indices.push(idx + V_BOT_LEFT as u32);
         indices.push(idx + V_BOT_RIGHT as u32);
-    }
-
-    if let Some(bg_color) = word.style.bg_color {
-        let bg_color = color::to_tuple_rgba(bg_color);
-        for v in verts.iter_mut() {
-            v.bg_color = bg_color;
-        }
     }
 
     Ok((

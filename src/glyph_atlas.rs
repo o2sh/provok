@@ -1,18 +1,18 @@
 use crate::bitmaps::atlas::{Atlas, Sprite};
 use crate::bitmaps::{Image, Texture2d};
-use crate::font::{GlyphInfo, LoadedFont};
+use crate::font::{GlyphInfo, RasterizedGlyph};
 use crate::utils::PixelLength;
 use failure::Fallible;
 use glium::texture::SrgbTexture2d;
 use glium::Display;
 use std::rc::Rc;
 
-pub struct Glyph<T: Texture2d> {
+pub struct GlyphTexture<T: Texture2d> {
     pub x_offset: PixelLength,
     pub y_offset: PixelLength,
     pub bearing_x: PixelLength,
     pub bearing_y: PixelLength,
-    pub texture: Option<Sprite<T>>,
+    pub texture: Sprite<T>,
 }
 
 pub struct GlyphAtlas<T: Texture2d> {
@@ -37,15 +37,13 @@ impl GlyphAtlas<SrgbTexture2d> {
 impl<T: Texture2d> GlyphAtlas<T> {
     pub fn load_glyph(
         &mut self,
-        font: &Rc<LoadedFont>,
+        glyph: RasterizedGlyph,
         info: &GlyphInfo,
-    ) -> Fallible<Rc<Glyph<T>>> {
-        let glyph = font.rasterize_glyph(info.glyph_pos)?;
-
-        let raw_im = Image::with(
+    ) -> Fallible<GlyphTexture<T>> {
+        let raw_im = Image::with_rgba32(
             glyph.width as usize,
             glyph.height as usize,
-            3 * glyph.width as usize,
+            4 * glyph.width as usize,
             &glyph.data,
         );
 
@@ -54,10 +52,10 @@ impl<T: Texture2d> GlyphAtlas<T> {
         let x_offset = info.x_offset;
         let y_offset = info.y_offset;
 
-        let tex = self.atlas.allocate(&raw_im)?;
+        let texture = self.atlas.allocate(&raw_im)?;
 
-        let glyph = Glyph { texture: Some(tex), x_offset, y_offset, bearing_x, bearing_y };
+        let glyph = GlyphTexture { texture, x_offset, y_offset, bearing_x, bearing_y };
 
-        Ok(Rc::new(glyph))
+        Ok(glyph)
     }
 }

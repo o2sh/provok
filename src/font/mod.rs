@@ -28,8 +28,8 @@ impl LoadedFont {
         self.shaper.shape(&word.text, word.hb_script, word.hb_direction, &word.hb_lang)
     }
 
-    pub fn rasterize_glyph(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {
-        self.rasterizer.rasterize_glyph(glyph_pos)
+    pub fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {
+        self.rasterizer.rasterize(glyph_pos)
     }
 }
 
@@ -44,7 +44,7 @@ impl FontConfiguration {
         Self { fonts: RefCell::new(HashMap::new()), font_size, dpi }
     }
 
-    pub fn resolve_font(&self, style: &TextStyle) -> Fallible<Rc<LoadedFont>> {
+    pub fn get_font(&self, style: &TextStyle) -> Fallible<Rc<LoadedFont>> {
         let mut fonts = self.fonts.borrow_mut();
 
         if let Some(entry) = fonts.get(style) {

@@ -17,13 +17,13 @@ fn ft_result<T>(err: FT_Error, t: T) -> Fallible<T> {
 }
 
 fn render_mode_to_load_target(render_mode: FT_Render_Mode) -> u32 {
-    (render_mode as u32) << 16
+    (render_mode as u32) & 15 << 16
 }
 
 pub fn compute_load_flags() -> (i32, FT_Render_Mode) {
     let render = FT_Render_Mode::FT_RENDER_MODE_LCD;
 
-    let flags = render_mode_to_load_target(FT_Render_Mode::FT_RENDER_MODE_LIGHT);
+    let flags = render_mode_to_load_target(render);
 
     (flags as i32, render)
 }

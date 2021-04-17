@@ -45,7 +45,6 @@ pub struct Word {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TextStyle {
     pub fg_color: RgbColor,
-    pub bg_color: Option<RgbColor>,
     pub font_attributes: FontAttributes,
 }
 
@@ -74,11 +73,6 @@ impl Input {
         let input_json = InputJson::parse(path)?;
         let mut words: Vec<Word> = Vec::new();
         for word_json in input_json.words.iter() {
-            let bg_color = if let Some(c) = &word_json.bg_color {
-                Some(RgbColor::from_named_or_rgb_string(c).unwrap())
-            } else {
-                None
-            };
             let lang = detector.detect_language_of(&word_json.text).unwrap();
             words.push(Word {
                 text: String::from(&word_json.text),
@@ -88,7 +82,6 @@ impl Input {
                 canvas_color: RgbColor::from_named_or_rgb_string(&word_json.canvas_color).unwrap(),
                 style: TextStyle {
                     fg_color: RgbColor::from_named_or_rgb_string(&word_json.fg_color).unwrap(),
-                    bg_color,
                     font_attributes: FontAttributes {
                         family: language::get_font(&lang).into(),
                         bold: word_json.bold.unwrap_or(false),

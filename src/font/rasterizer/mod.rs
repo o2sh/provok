@@ -22,7 +22,7 @@ pub struct FontMetrics {
 }
 
 pub trait FontRasterizer {
-    fn rasterize_glyph(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph>;
+    fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph>;
 }
 
 pub fn new_rasterizer(

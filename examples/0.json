@@ -4,9 +4,13 @@
         {
             "text": "\"VOID\"",
             "canvas_color": "#ffffff",
-            "fg_color": "#ffffff",
-            "bg_color": "#000000",
+            "fg_color": "#ff0000",
             "bold": true
+        },
+        {
+            "text": "ليونيكود",
+            "canvas_color": "#65A8EC",
+            "fg_color": "#000000"
         }
     ]
 }
