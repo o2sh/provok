@@ -1,10 +1,3 @@
-#[derive(Debug, Clone, Copy)]
-pub struct Dimensions {
-    pub pixel_width: usize,
-    pub pixel_height: usize,
-    pub dpi: usize,
-}
-
 pub struct PixelUnit;
 pub type PixelLength = euclid::Length<f64, PixelUnit>;
 pub type Point = euclid::Point2D<isize, PixelUnit>;

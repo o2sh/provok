@@ -35,12 +35,11 @@ impl GlyphAtlas<SrgbTexture2d> {
 }
 
 impl<T: Texture2d> GlyphAtlas<T> {
-    pub fn get_glyph(&mut self, font: &Rc<LoadedFont>, info: &GlyphInfo) -> Fallible<Rc<Glyph<T>>> {
-        let glyph = self.load_glyph(info, font)?;
-        Ok(glyph)
-    }
-
-    fn load_glyph(&mut self, info: &GlyphInfo, font: &Rc<LoadedFont>) -> Fallible<Rc<Glyph<T>>> {
+    pub fn load_glyph(
+        &mut self,
+        font: &Rc<LoadedFont>,
+        info: &GlyphInfo,
+    ) -> Fallible<Rc<Glyph<T>>> {
         let glyph = font.rasterize_glyph(info.glyph_pos)?;
 
         let raw_im = Image::with(

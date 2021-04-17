@@ -139,9 +139,9 @@ fn paint(
         word.canvas_color.blue as f32 / 255.,
         1.0,
     );
-    let mut glyph_cache = GlyphAtlas::new(display, ATLAS_SIZE)?;
+    let mut glyph_atlas = GlyphAtlas::new(display, ATLAS_SIZE)?;
     let (glyph_vertex_buffer, glyph_index_buffer) =
-        render_text(word, display, &mut glyph_cache, fontconfig)?;
+        render_text(word, display, &mut glyph_atlas, fontconfig)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
         -(window_width as f32) / 2.0,
         window_width as f32 / 2.0,
@@ -151,7 +151,7 @@ fn paint(
         1.0,
     )
     .to_arrays();
-    let tex = glyph_cache.atlas.texture();
+    let tex = glyph_atlas.atlas.texture();
 
     let draw_params =
         glium::DrawParameters { blend: glium::Blend::alpha_blending(), ..Default::default() };
@@ -199,7 +199,7 @@ fn render_text(
     let glyph_info = font.shape(&word)?;
 
     for info in &glyph_info {
-        let glyph = glyph_atlas.get_glyph(&font, info)?;
+        let glyph = glyph_atlas.load_glyph(&font, info)?;
         let texture = glyph.texture.as_ref().unwrap();
 
         let pixel_rect = pixel_rect(texture);
