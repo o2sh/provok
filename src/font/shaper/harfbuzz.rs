@@ -1,6 +1,5 @@
 use crate::font::ftwrap;
 use crate::font::hbwrap as harfbuzz;
-use crate::font::locator::FontDataHandle;
 use crate::font::shaper::{FontShaper, GlyphInfo};
 use crate::utils::PixelLength;
 use failure::Fallible;
@@ -27,13 +26,10 @@ pub struct HarfbuzzShaper {
 }
 
 impl HarfbuzzShaper {
-    pub fn new(handle: &FontDataHandle, size: f64, dpi: u32) -> Fallible<Self> {
-        let lib = ftwrap::Library::new()?;
-        let mut face = lib.face_from_locator(&handle)?;
+    pub fn new(face: &ftwrap::Face) -> Fallible<Self> {
         let mut font = harfbuzz::Font::new(face.face);
         let (load_flags, _) = ftwrap::compute_load_flags();
         font.set_load_flags(load_flags);
-        face.set_font_size(size, dpi)?;
         Ok(Self { font: RefCell::new(font) })
     }
 }

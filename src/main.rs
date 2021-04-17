@@ -76,7 +76,7 @@ fn run(input_path: &str) -> Fallible<()> {
     let cb = ContextBuilder::new();
     let display = Display::new(wb, cb, &event_loop)?;
     let input = Rc::new(Input::new(input_path)?);
-    let fontconfig = Rc::new(FontConfiguration::new(input.config.font_size, input.config.dpi));
+    let fontconfig = Rc::new(FontConfiguration::new(input.config.font_size, input.config.dpi)?);
     let shaders = compile_shaders(&display)?;
     let mut i = 0;
     event_loop.run(move |event, _, control_flow| {
@@ -180,21 +180,21 @@ fn render_text(
 
     let font = fontconfig.get_font(&word.style)?;
     let glyph_infos = font.shape(&word)?;
-
+    println!("before");
     for glyph_info in &glyph_infos {
         let rasterized_glyph = font.rasterize(glyph_info.glyph_pos)?;
         let glyph = glyph_atlas.load_glyph(rasterized_glyph, &glyph_info)?;
 
         let x0 = x + (glyph.x_offset + glyph.bearing_x).get() as f32;
-        let y0 = y + (glyph.y_offset + glyph.bearing_y).get() as f32;
+        let y0 = y - (glyph.y_offset + glyph.bearing_y).get() as f32;
 
         let x1 = x0 + glyph.texture.width as f32;
         let y1 = y0 + glyph.texture.height as f32;
 
+        println!("x0: {}, y0: {}, x1: {}, y1: {}", x0, y0, x1, y1);
         x += glyph_info.x_advance.get() as f32;
         y += glyph_info.y_advance.get() as f32;
         let idx = verts.len() as u32;
-        println!("tex_coords: {:?}", glyph.texture.tex_coords);
         verts.push(Vertex {
             position: (x0, y0),
             tex: (glyph.texture.tex_coords.min_x(), glyph.texture.tex_coords.min_y()),
@@ -225,6 +225,7 @@ fn render_text(
         indices.push(idx + V_BOT_RIGHT as u32);
     }
 
+    println!("after");
     Ok((
         VertexBuffer::dynamic(display, &verts)?,
         IndexBuffer::new(display, glium::index::PrimitiveType::TrianglesList, &indices)?,

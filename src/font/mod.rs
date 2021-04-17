@@ -34,14 +34,16 @@ impl LoadedFont {
 }
 
 pub struct FontConfiguration {
+    lib: ftwrap::Library,
     fonts: RefCell<HashMap<TextStyle, Rc<LoadedFont>>>,
     font_size: f64,
     dpi: u32,
 }
 
 impl FontConfiguration {
-    pub fn new(font_size: f64, dpi: u32) -> Self {
-        Self { fonts: RefCell::new(HashMap::new()), font_size, dpi }
+    pub fn new(font_size: f64, dpi: u32) -> Fallible<Self> {
+        let lib = ftwrap::Library::new()?;
+        Ok(Self { lib, fonts: RefCell::new(HashMap::new()), font_size, dpi })
     }
 
     pub fn get_font(&self, style: &TextStyle) -> Fallible<Rc<LoadedFont>> {
@@ -51,8 +53,11 @@ impl FontConfiguration {
             return Ok(Rc::clone(entry));
         }
         let font_data_handle = load_built_in_font(&style.font_attributes)?;
-        let shaper = shaper::new_shaper(&font_data_handle, self.font_size, self.dpi)?;
-        let rasterizer = rasterizer::new_rasterizer(&font_data_handle, self.font_size, self.dpi)?;
+
+        let mut face = self.lib.face_from_locator(&font_data_handle)?;
+        face.set_font_size(self.font_size, self.dpi)?;
+        let shaper = shaper::new_shaper(&face)?;
+        let rasterizer = rasterizer::new_rasterizer(face)?;
 
         let loaded = Rc::new(LoadedFont { rasterizer, shaper });
 

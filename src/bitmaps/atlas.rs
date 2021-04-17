@@ -71,7 +71,6 @@ where
 
         self.texture.write(rect, im);
 
-        println!("pixel_rext: {:?}", rect);
         let tex_coords = self.texture.to_texture_coords(rect);
 
         self.left += reserve_width;
