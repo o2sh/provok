@@ -1,19 +1,10 @@
-use crate::font::locator::FontDataHandle;
+use crate::font::loader::{FontDataHandle, Names};
 use crate::input::FontAttributes;
 use allsorts::binary::read::ReadScope;
 use allsorts::font_data::FontData;
 use allsorts::tables::{OffsetTable, OpenTypeData};
 use failure::{Fallible, ResultExt};
 use std::path::{Path, PathBuf};
-
-#[derive(Debug)]
-pub struct Names {
-    full_name: String,
-    unique: Option<String>,
-    family: Option<String>,
-    sub_family: Option<String>,
-    postscript_name: Option<String>,
-}
 
 impl Names {
     fn from_name_table_data(name_table: &[u8]) -> Fallible<Names> {

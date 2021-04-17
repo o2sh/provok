@@ -1,4 +1,4 @@
-use crate::font::locator::FontDataHandle;
+use crate::font::loader::FontDataHandle;
 use failure::{format_err, Fallible, ResultExt};
 pub use freetype::freetype::*;
 use std::ptr;

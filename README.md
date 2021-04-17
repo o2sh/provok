@@ -2,19 +2,15 @@
 
 ## Input
 
-```
+```text
 {
     "font_size": 50,
     "words": [
         {
-            "text": "\"VOID\"",
+            "text": "\"PROVOK\"",
             "canvas_color": "#ffffff",
             "fg_color": "#ffffff",
-            "bg_color": "#000000",
             "bold": true,
-            "underline": false,
-            "italic": false,
-            "strikethrough": false 
         },
 ...
 }

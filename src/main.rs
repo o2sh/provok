@@ -172,15 +172,15 @@ fn render_text(
     glyph_atlas: &mut GlyphAtlas<SrgbTexture2d>,
     fontconfig: &FontConfiguration,
 ) -> Fallible<(VertexBuffer<Vertex>, IndexBuffer<u32>)> {
-    let mut x = 0.;
-    let mut y = 0.;
     let mut verts = Vec::new();
     let mut indices = Vec::new();
     let fg_color = color::to_tuple_rgba(word.style.fg_color);
 
     let font = fontconfig.get_font(&word.style)?;
     let glyph_infos = font.shape(&word)?;
-    println!("before");
+    let total_width = glyph_infos.iter().fold(0., |acc, info| acc + info.x_advance.get() as f32);
+    let mut x = -total_width / 2.;
+    let mut y = 0.;
     for glyph_info in &glyph_infos {
         let rasterized_glyph = font.rasterize(glyph_info.glyph_pos)?;
         let glyph = glyph_atlas.load_glyph(rasterized_glyph, &glyph_info)?;
@@ -191,7 +191,6 @@ fn render_text(
         let x1 = x0 + glyph.texture.width as f32;
         let y1 = y0 + glyph.texture.height as f32;
 
-        println!("x0: {}, y0: {}, x1: {}, y1: {}", x0, y0, x1, y1);
         x += glyph_info.x_advance.get() as f32;
         y += glyph_info.y_advance.get() as f32;
         let idx = verts.len() as u32;
@@ -225,7 +224,6 @@ fn render_text(
         indices.push(idx + V_BOT_RIGHT as u32);
     }
 
-    println!("after");
     Ok((
         VertexBuffer::dynamic(display, &verts)?,
         IndexBuffer::new(display, glium::index::PrimitiveType::TrianglesList, &indices)?,
