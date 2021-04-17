@@ -1,4 +1,4 @@
-use failure::{Error, Fallible};
+use failure::Fallible;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -16,45 +16,32 @@ pub use crate::font::rasterizer::{FontMetrics, RasterizedGlyph};
 use crate::font::shaper::FontShaper;
 pub use crate::font::shaper::GlyphInfo;
 
-use crate::input::{Config, TextStyle, Word};
+use crate::input::{TextStyle, Word};
 
 pub struct LoadedFont {
     rasterizer: Box<dyn FontRasterizer>,
     shaper: Box<dyn FontShaper>,
-    metrics: FontMetrics,
-    font_size: f64,
-    dpi: u32,
 }
 
 impl LoadedFont {
-    pub fn metrics(&self) -> FontMetrics {
-        self.metrics
-    }
-
     pub fn shape(&self, word: &Word) -> Fallible<Vec<GlyphInfo>> {
         self.shaper.shape(&word.text, word.hb_script, word.hb_direction, &word.hb_lang)
     }
 
     pub fn rasterize_glyph(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {
-        self.rasterizer.rasterize_glyph(glyph_pos, self.font_size, self.dpi)
+        self.rasterizer.rasterize_glyph(glyph_pos)
     }
 }
 
 pub struct FontConfiguration {
     fonts: RefCell<HashMap<TextStyle, Rc<LoadedFont>>>,
-    dpi_scale: RefCell<f64>,
-    font_scale: RefCell<f64>,
-    config: Rc<Config>,
+    font_size: f64,
+    dpi: u32,
 }
 
 impl FontConfiguration {
-    pub fn new(config: Rc<Config>) -> Self {
-        Self {
-            fonts: RefCell::new(HashMap::new()),
-            font_scale: RefCell::new(1.0),
-            dpi_scale: RefCell::new(1.0),
-            config,
-        }
+    pub fn new(font_size: f64, dpi: u32) -> Self {
+        Self { fonts: RefCell::new(HashMap::new()), font_size, dpi }
     }
 
     pub fn resolve_font(&self, style: &TextStyle) -> Fallible<Rc<LoadedFont>> {
@@ -64,22 +51,13 @@ impl FontConfiguration {
             return Ok(Rc::clone(entry));
         }
         let font_data_handle = load_built_in_font(&style.font_attributes)?;
-        let shaper = shaper::new_shaper(&font_data_handle)?;
-        let rasterizer = rasterizer::new_rasterizer(&font_data_handle)?;
-        let font_size = self.config.font_size * *self.font_scale.borrow();
-        let dpi = *self.dpi_scale.borrow() as u32 * self.config.dpi as u32;
-        let metrics = rasterizer.metrics(font_size, dpi)?;
+        let shaper = shaper::new_shaper(&font_data_handle, self.font_size, self.dpi)?;
+        let rasterizer = rasterizer::new_rasterizer(&font_data_handle, self.font_size, self.dpi)?;
 
-        let loaded = Rc::new(LoadedFont { rasterizer, shaper, metrics, font_size, dpi });
+        let loaded = Rc::new(LoadedFont { rasterizer, shaper });
 
         fonts.insert(style.clone(), Rc::clone(&loaded));
 
         Ok(loaded)
-    }
-
-    pub fn font_metrics(&self, style: &TextStyle) -> Result<FontMetrics, Error> {
-        let font = self.resolve_font(style)?;
-        let metrics = font.metrics();
-        Ok(metrics)
     }
 }

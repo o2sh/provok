@@ -4,7 +4,7 @@ use crate::font::locator::FontDataHandle;
 use crate::font::shaper::{FontShaper, GlyphInfo};
 use crate::utils::PixelLength;
 use failure::Fallible;
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 
 #[derive(Clone)]
 struct Info<'a> {
@@ -13,6 +13,7 @@ struct Info<'a> {
 }
 
 fn make_glyphinfo(info: &Info) -> GlyphInfo {
+    println!("{}, {}", info.pos.x_advance, info.pos.y_advance);
     GlyphInfo {
         glyph_pos: info.codepoint,
         x_advance: PixelLength::new(f64::from(info.pos.x_advance) / 64.0),
@@ -23,28 +24,18 @@ fn make_glyphinfo(info: &Info) -> GlyphInfo {
 }
 
 pub struct HarfbuzzShaper {
-    handle: FontDataHandle,
-    font: RefCell<Option<harfbuzz::Font>>,
-    lib: ftwrap::Library,
+    font: RefCell<harfbuzz::Font>,
 }
 
 impl HarfbuzzShaper {
-    pub fn new(handle: &FontDataHandle) -> Fallible<Self> {
+    pub fn new(handle: &FontDataHandle, size: f64, dpi: u32) -> Fallible<Self> {
         let lib = ftwrap::Library::new()?;
-        Ok(Self { font: RefCell::new(None), handle: handle.clone(), lib })
-    }
-
-    fn load_font(&self) -> Fallible<RefMut<harfbuzz::Font>> {
-        let mut opt_pair = self.font.borrow_mut();
-        if opt_pair.is_none() {
-            let face = self.lib.face_from_locator(&self.handle)?;
-            let mut font = harfbuzz::Font::new(face.face);
-            let (load_flags, _) = ftwrap::compute_load_flags();
-            font.set_load_flags(load_flags);
-            *opt_pair = Some(font);
-        }
-
-        Ok(RefMut::map(opt_pair, |opt_pair| opt_pair.as_mut().unwrap()))
+        let mut face = lib.face_from_locator(&handle)?;
+        let mut font = harfbuzz::Font::new(face.face);
+        let (load_flags, _) = ftwrap::compute_load_flags();
+        font.set_load_flags(load_flags);
+        face.set_font_size(size, dpi)?;
+        Ok(Self { font: RefCell::new(font) })
     }
 }
 
@@ -67,7 +58,7 @@ impl FontShaper for HarfbuzzShaper {
         buf.set_language(harfbuzz::language_from_string(hb_lang)?);
         buf.add_str(text);
 
-        let mut font = self.load_font()?;
+        let mut font = self.font.borrow_mut();
         font.shape(&mut buf, features.as_slice());
 
         let hb_infos = buf.glyph_infos();

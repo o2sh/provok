@@ -22,10 +22,13 @@ pub struct FontMetrics {
 }
 
 pub trait FontRasterizer {
-    fn rasterize_glyph(&self, glyph_pos: u32, size: f64, dpi: u32) -> Fallible<RasterizedGlyph>;
-    fn metrics(&self, size: f64, dpi: u32) -> Fallible<FontMetrics>;
+    fn rasterize_glyph(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph>;
 }
 
-pub fn new_rasterizer(handle: &FontDataHandle) -> Fallible<Box<dyn FontRasterizer>> {
-    Ok(Box::new(freetype::FreeTypeRasterizer::new(handle)?))
+pub fn new_rasterizer(
+    handle: &FontDataHandle,
+    size: f64,
+    dpi: u32,
+) -> Fallible<Box<dyn FontRasterizer>> {
+    Ok(Box::new(freetype::FreeTypeRasterizer::new(handle, size, dpi)?))
 }

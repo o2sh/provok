@@ -21,7 +21,6 @@ pub struct CachedGlyph<T: Texture2d> {
     pub bearing_x: PixelLength,
     pub bearing_y: PixelLength,
     pub texture: Option<Sprite<T>>,
-    pub scale: f64,
 }
 
 pub struct GlyphCache<T: Texture2d> {
@@ -67,17 +66,8 @@ impl<T: Texture2d> GlyphCache<T> {
         info: &GlyphInfo,
         font: &Rc<LoadedFont>,
     ) -> Fallible<Rc<CachedGlyph<T>>> {
-        let metrics = font.metrics();
         let glyph = font.rasterize_glyph(info.glyph_pos)?;
-        let (cell_width, cell_height) = (metrics.cell_width, metrics.cell_height);
 
-        let scale = if (info.x_advance).get().floor() > cell_width.get() {
-            (cell_width / info.x_advance).get()
-        } else if PixelLength::new(glyph.height as f64) > cell_height {
-            cell_height.get() / glyph.height as f64
-        } else {
-            1.0f64
-        };
         let raw_im = Image::with(
             glyph.width as usize,
             glyph.height as usize,
@@ -85,18 +75,14 @@ impl<T: Texture2d> GlyphCache<T> {
             &glyph.data,
         );
 
-        let bearing_x = glyph.left * scale;
-        let bearing_y = glyph.top * scale;
-        let x_offset = info.x_offset * scale;
-        let y_offset = info.y_offset * scale;
-
-        let (scale, raw_im) =
-            if scale != 1.0 { (1.0, raw_im.scale_by(scale)) } else { (scale, raw_im) };
+        let bearing_x = glyph.left;
+        let bearing_y = glyph.top;
+        let x_offset = info.x_offset;
+        let y_offset = info.y_offset;
 
         let tex = self.atlas.allocate(&raw_im)?;
 
-        let glyph =
-            CachedGlyph { texture: Some(tex), x_offset, y_offset, bearing_x, bearing_y, scale };
+        let glyph = CachedGlyph { texture: Some(tex), x_offset, y_offset, bearing_x, bearing_y };
 
         Ok(Rc::new(glyph))
     }

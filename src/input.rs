@@ -30,7 +30,7 @@ pub struct Input {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
     pub font_size: f64,
-    pub dpi: f64,
+    pub dpi: u32,
 }
 
 pub struct Word {
@@ -102,7 +102,7 @@ impl Input {
             })
         }
 
-        Ok(Self { config: Config { font_size: input_json.font_size as f64, dpi: 96. }, words })
+        Ok(Self { config: Config { font_size: input_json.font_size as f64, dpi: 96 }, words })
     }
 }
 

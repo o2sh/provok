@@ -23,6 +23,6 @@ pub trait FontShaper {
     ) -> Fallible<Vec<GlyphInfo>>;
 }
 
-pub fn new_shaper(handle: &FontDataHandle) -> Fallible<Box<dyn FontShaper>> {
-    Ok(Box::new(harfbuzz::HarfbuzzShaper::new(handle)?))
+pub fn new_shaper(handle: &FontDataHandle, size: f64, dpi: u32) -> Fallible<Box<dyn FontShaper>> {
+    Ok(Box::new(harfbuzz::HarfbuzzShaper::new(handle, size, dpi)?))
 }

@@ -1,4 +1,4 @@
-use crate::bitmaps::{BitmapImage, Texture2d, TextureRect};
+use crate::bitmaps::{BitmapImage, Texture2d};
 use crate::utils::{Point, Rect, Size};
 use failure::{ensure, Fallible};
 use std::rc::Rc;
@@ -95,20 +95,9 @@ where
     }
 }
 
-impl<T> Sprite<T>
-where
-    T: Texture2d,
-{
-    pub fn texture_coords(&self) -> TextureRect {
-        self.texture.to_texture_coords(self.coords)
-    }
-}
-
-pub fn pixel_rect<T: Texture2d>(scale: f32, sprite: &Sprite<T>) -> Rect {
-    let width = sprite.coords.size.width as f32 * scale;
-
+pub fn pixel_rect<T: Texture2d>(sprite: &Sprite<T>) -> Rect {
     Rect::new(
         Point::new(sprite.coords.origin.x, sprite.coords.origin.y),
-        Size::new(width as isize, sprite.coords.size.height),
+        Size::new(sprite.coords.size.width, sprite.coords.size.height),
     )
 }

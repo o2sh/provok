@@ -14,8 +14,10 @@ use glium::glutin::event_loop::ControlFlow;
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
+use glium::texture::SrgbTexture2d;
 use glium::Program;
 use glium::{Display, Frame, Surface};
+use glium::{IndexBuffer, VertexBuffer};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -25,18 +27,51 @@ mod font;
 mod glyphcache;
 mod input;
 mod language;
-mod quad;
-mod renderstate;
 mod utils;
-mod utilsprites;
 
 use bitmaps::{atlas::pixel_rect, Texture2d};
-use color::rgbcolor_to_color;
 use font::FontConfiguration;
+use glyphcache::GlyphCache;
 use input::{Input, Word};
-use quad::Quad;
-use renderstate::{compile_shaders, RenderMetrics, RenderState};
-use utils::PixelLength;
+
+const ATLAS_SIZE: usize = 8192;
+
+static VERTEX_SHADER: &str =
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/vertex.glsl"));
+
+static FRAGMENT_SHADER: &str =
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/fragment.glsl"));
+
+pub const V_TOP_LEFT: usize = 0;
+pub const V_TOP_RIGHT: usize = 1;
+pub const V_BOT_LEFT: usize = 2;
+pub const V_BOT_RIGHT: usize = 3;
+
+#[derive(Copy, Clone, Default)]
+pub struct Vertex {
+    pub position: (f32, f32),
+    pub adjust: (f32, f32),
+    pub tex: (f32, f32),
+    pub underline: (f32, f32),
+    pub bg_color: (f32, f32, f32, f32),
+    pub fg_color: (f32, f32, f32, f32),
+}
+
+implement_vertex!(Vertex, position, adjust, tex, bg_color, fg_color);
+pub fn compile_shaders(display: &Display) -> Fallible<glium::Program> {
+    let glyph_source = glium::program::ProgramCreationInput::SourceCode {
+        vertex_shader: VERTEX_SHADER,
+        fragment_shader: FRAGMENT_SHADER,
+        outputs_srgb: true,
+        tessellation_control_shader: None,
+        tessellation_evaluation_shader: None,
+        transform_feedback_varyings: None,
+        uses_point_size: false,
+        geometry_shader: None,
+    };
+    let program = glium::Program::new(display, glyph_source)?;
+    Ok(program)
+}
 
 fn run(input_path: &str) -> Fallible<()> {
     let event_loop = EventLoop::new();
@@ -45,7 +80,7 @@ fn run(input_path: &str) -> Fallible<()> {
     let cb = ContextBuilder::new();
     let display = Display::new(wb, cb, &event_loop)?;
     let input = Rc::new(Input::new(input_path)?);
-    let fontconfig = Rc::new(FontConfiguration::new(Rc::new(input.config.clone())));
+    let fontconfig = Rc::new(FontConfiguration::new(input.config.font_size, input.config.dpi));
     let shaders = compile_shaders(&display)?;
     let mut i = 0;
     event_loop.run(move |event, _, control_flow| {
@@ -69,18 +104,14 @@ fn run(input_path: &str) -> Fallible<()> {
         *control_flow = ControlFlow::WaitUntil(next_frame_time);
         let mut target = display.draw();
 
-        let render_metrics =
-            RenderMetrics::new(&fontconfig, &input.words[i].style, window_width, window_height);
-        let mut render_state =
-            RenderState::new(&display, &render_metrics, &input.words[i].text.chars().count())
-                .unwrap();
         paint(
-            &mut render_state,
-            &render_metrics,
             &fontconfig,
+            &display,
             &mut target,
             &shaders,
             &input.words[i],
+            window_width,
+            window_height,
         )
         .unwrap();
         target.finish().unwrap();
@@ -94,12 +125,13 @@ fn run(input_path: &str) -> Fallible<()> {
 }
 
 fn paint(
-    render_state: &mut RenderState,
-    render_metrics: &RenderMetrics,
     fontconfig: &Rc<FontConfiguration>,
+    display: &Display,
     frame: &mut Frame,
     program: &Program,
     word: &Word,
+    window_width: f64,
+    window_height: f64,
 ) -> Fallible<()> {
     frame.clear_color(
         word.canvas_color.red as f32 / 255.,
@@ -107,41 +139,43 @@ fn paint(
         word.canvas_color.blue as f32 / 255.,
         1.0,
     );
-    render_text(word, render_state, render_metrics, fontconfig)?;
+    let mut glyph_cache = GlyphCache::new(display, ATLAS_SIZE)?;
+    let (glyph_vertex_buffer, glyph_index_buffer) =
+        render_text(word, display, &mut glyph_cache, fontconfig)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
-        -(render_metrics.win_size.width as f32) / 2.0,
-        render_metrics.win_size.width as f32 / 2.0,
-        render_metrics.win_size.height as f32 / 2.0,
-        -(render_metrics.win_size.height as f32) / 2.0,
+        -(window_width as f32) / 2.0,
+        window_width as f32 / 2.0,
+        window_height as f32 / 2.0,
+        -(window_height as f32) / 2.0,
         -1.0,
         1.0,
     )
     .to_arrays();
-    let tex = render_state.glyph_cache.atlas.texture();
+    let tex = glyph_cache.atlas.texture();
 
     let draw_params =
         glium::DrawParameters { blend: glium::Blend::alpha_blending(), ..Default::default() };
 
     frame.draw(
-        &render_state.glyph_vertex_buffer,
-        &render_state.glyph_index_buffer,
+        &glyph_vertex_buffer,
+        &glyph_index_buffer,
         &program,
         &uniform! {
             projection: projection,
             glyph_tex: &*tex,
-            bg_and_line_layer: true
+            draw_bg_color: true
         },
         &draw_params,
     )?;
 
     frame.draw(
-        &render_state.glyph_vertex_buffer,
-        &render_state.glyph_index_buffer,
+        &glyph_vertex_buffer,
+        &glyph_index_buffer,
         &program,
         &uniform! {
             projection: projection,
             glyph_tex: &*tex,
-            bg_and_line_layer: false
+            draw_bg_color: false
         },
         &draw_params,
     )?;
@@ -151,62 +185,82 @@ fn paint(
 
 fn render_text(
     word: &Word,
-    render_state: &mut RenderState,
-    render_metrics: &RenderMetrics,
+    display: &Display,
+    glyph_cache: &mut GlyphCache<SrgbTexture2d>,
     fontconfig: &FontConfiguration,
-) -> Fallible<()> {
-    let cell_width = render_metrics.cell_size.width as f32;
-    let num_cols = render_metrics.win_size.width as usize / cell_width as usize;
-    let vb = &mut render_state.glyph_vertex_buffer;
-    let mut vertices = vb
-        .slice_mut(..)
-        .ok_or_else(|| failure::err_msg("we're confused about the screen size"))?
-        .map();
-    let fg_color = rgbcolor_to_color(word.style.fg_color);
+) -> Fallible<(VertexBuffer<Vertex>, IndexBuffer<u32>)> {
+    let mut x = 0.;
+    let mut y = 0.;
+    let mut verts = Vec::new();
+    let mut indices = Vec::new();
+    let fg_color = color::to_tuple_rgba(word.style.fg_color);
 
     let font = fontconfig.resolve_font(&word.style)?;
     let glyph_info = font.shape(&word)?;
 
-    for (cell_idx, info) in glyph_info.iter().enumerate() {
-        let glyph = render_state.glyph_cache.get_glyph(&font, info, &word.style)?;
+    for info in &glyph_info {
+        let glyph = glyph_cache.get_glyph(&font, info, &word.style)?;
+        let texture = glyph.texture.as_ref().unwrap();
 
-        let underline_tex_rect = render_state
-            .util_sprites
-            .select_sprite(word.style.strikethrough, word.style.underline)
-            .texture_coords();
-
-        if cell_idx >= num_cols {
-            break;
-        }
-
-        let texture = glyph.texture.as_ref().unwrap_or(&render_state.util_sprites.white_space);
-
-        let pixel_rect = pixel_rect(glyph.scale as f32, texture);
+        let pixel_rect = pixel_rect(texture);
         let texture_rect = texture.texture.to_texture_coords(pixel_rect);
-        let left = (glyph.x_offset + glyph.bearing_x).get() as f32;
-        let top = ((PixelLength::new(render_metrics.cell_size.height as f64)
-            + render_metrics.descender)
-            - (glyph.y_offset + glyph.bearing_y))
-            .get() as f32;
-        let bottom = (pixel_rect.size.height as f32 * glyph.scale as f32) + top
-            - render_metrics.cell_size.height as f32;
-        let right = pixel_rect.size.width as f32 + left - render_metrics.cell_size.width as f32;
 
-        let mut quad = Quad::for_cell(cell_idx, &mut vertices);
-        println!(
-            "cell_width: {}, pixel_rect.width: {}, left: {}, top: {}, right: {}, bottom: {}",
-            render_metrics.cell_size.width, pixel_rect.size.width, left, top, right, bottom
-        );
-        quad.set_fg_color(fg_color);
-        if let Some(bg_color) = word.style.bg_color {
-            let bg_color = rgbcolor_to_color(bg_color);
-            quad.set_bg_color(bg_color);
-        }
-        quad.set_texture(texture_rect);
-        quad.set_underline(underline_tex_rect);
-        quad.set_texture_adjust(left, top, right, bottom);
+        let x0 = x + (glyph.x_offset + glyph.bearing_x).get() as f32;
+        let y0 = y + (glyph.y_offset + glyph.bearing_y).get() as f32;
+
+        let x1 = x0 + pixel_rect.size.width as f32;
+        let y1 = y0 + pixel_rect.size.height as f32;
+
+        x += info.x_advance.get() as f32;
+        y += info.y_advance.get() as f32;
+        println!("x_advance: {}, y_advance: {}", info.x_advance.get(), info.y_advance.get());
+        println!("x0: {}, y0: {}, x1: {}, y1: {}", x0, y0, x1, y1);
+        let idx = verts.len() as u32;
+        verts.push(Vertex {
+            position: (x0, y0),
+            tex: (texture_rect.min_x(), texture_rect.min_y()),
+            fg_color,
+            ..Default::default()
+        });
+        verts.push(Vertex {
+            position: (x1, y0),
+            tex: (texture_rect.max_x(), texture_rect.min_y()),
+            fg_color,
+            ..Default::default()
+        });
+        verts.push(Vertex {
+            position: (x0, y1),
+            tex: (texture_rect.min_x(), texture_rect.max_y()),
+            fg_color,
+            ..Default::default()
+        });
+        verts.push(Vertex {
+            position: (x1, y1),
+            tex: (texture_rect.max_x(), texture_rect.max_y()),
+            fg_color,
+            ..Default::default()
+        });
+
+        indices.push(idx + V_TOP_LEFT as u32);
+        indices.push(idx + V_TOP_RIGHT as u32);
+        indices.push(idx + V_BOT_LEFT as u32);
+
+        indices.push(idx + V_TOP_RIGHT as u32);
+        indices.push(idx + V_BOT_LEFT as u32);
+        indices.push(idx + V_BOT_RIGHT as u32);
     }
-    Ok(())
+
+    if let Some(bg_color) = word.style.bg_color {
+        let bg_color = color::to_tuple_rgba(bg_color);
+        for v in verts.iter_mut() {
+            v.bg_color = bg_color;
+        }
+    }
+
+    Ok((
+        VertexBuffer::dynamic(display, &verts)?,
+        IndexBuffer::new(display, glium::index::PrimitiveType::TrianglesList, &indices)?,
+    ))
 }
 
 fn main() -> Fallible<()> {
