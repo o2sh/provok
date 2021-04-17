@@ -24,14 +24,14 @@ use std::time::{Duration, Instant};
 mod bitmaps;
 mod color;
 mod font;
-mod glyphcache;
+mod glyph_atlas;
 mod input;
 mod language;
 mod utils;
 
 use bitmaps::{atlas::pixel_rect, Texture2d};
 use font::FontConfiguration;
-use glyphcache::GlyphCache;
+use glyph_atlas::GlyphAtlas;
 use input::{Input, Word};
 
 const ATLAS_SIZE: usize = 8192;
@@ -139,7 +139,7 @@ fn paint(
         word.canvas_color.blue as f32 / 255.,
         1.0,
     );
-    let mut glyph_cache = GlyphCache::new(display, ATLAS_SIZE)?;
+    let mut glyph_cache = GlyphAtlas::new(display, ATLAS_SIZE)?;
     let (glyph_vertex_buffer, glyph_index_buffer) =
         render_text(word, display, &mut glyph_cache, fontconfig)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
@@ -186,7 +186,7 @@ fn paint(
 fn render_text(
     word: &Word,
     display: &Display,
-    glyph_cache: &mut GlyphCache<SrgbTexture2d>,
+    glyph_atlas: &mut GlyphAtlas<SrgbTexture2d>,
     fontconfig: &FontConfiguration,
 ) -> Fallible<(VertexBuffer<Vertex>, IndexBuffer<u32>)> {
     let mut x = 0.;
@@ -199,7 +199,7 @@ fn render_text(
     let glyph_info = font.shape(&word)?;
 
     for info in &glyph_info {
-        let glyph = glyph_cache.get_glyph(&font, info, &word.style)?;
+        let glyph = glyph_atlas.get_glyph(&font, info)?;
         let texture = glyph.texture.as_ref().unwrap();
 
         let pixel_rect = pixel_rect(texture);
@@ -213,7 +213,6 @@ fn render_text(
 
         x += info.x_advance.get() as f32;
         y += info.y_advance.get() as f32;
-        println!("x_advance: {}, y_advance: {}", info.x_advance.get(), info.y_advance.get());
         println!("x0: {}, y0: {}, x1: {}, y1: {}", x0, y0, x1, y1);
         let idx = verts.len() as u32;
         verts.push(Vertex {

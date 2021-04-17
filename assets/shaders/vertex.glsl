@@ -6,7 +6,6 @@ in vec4 bg_color;
 in vec4 fg_color;
 
 uniform mat4 projection;
-uniform bool draw_bg_color;
 
 out vec2 o_tex;
 out vec4 o_fg_color;

@@ -13,7 +13,6 @@ struct Info<'a> {
 }
 
 fn make_glyphinfo(info: &Info) -> GlyphInfo {
-    println!("{}, {}", info.pos.x_advance, info.pos.y_advance);
     GlyphInfo {
         glyph_pos: info.codepoint,
         x_advance: PixelLength::new(f64::from(info.pos.x_advance) / 64.0),

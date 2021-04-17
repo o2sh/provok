@@ -46,8 +46,6 @@ pub struct Word {
 pub struct TextStyle {
     pub fg_color: RgbColor,
     pub bg_color: Option<RgbColor>,
-    pub underline: bool,
-    pub strikethrough: bool,
     pub font_attributes: FontAttributes,
 }
 
@@ -91,8 +89,6 @@ impl Input {
                 style: TextStyle {
                     fg_color: RgbColor::from_named_or_rgb_string(&word_json.fg_color).unwrap(),
                     bg_color,
-                    underline: word_json.underline.unwrap_or(false),
-                    strikethrough: word_json.strikethrough.unwrap_or(false),
                     font_attributes: FontAttributes {
                         family: language::get_font(&lang).into(),
                         bold: word_json.bold.unwrap_or(false),
