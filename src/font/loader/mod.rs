@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-pub mod allsorts;
+pub mod parser;
 
 #[derive(Debug)]
 pub struct Names {

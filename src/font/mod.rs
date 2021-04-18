@@ -10,7 +10,7 @@ pub mod loader;
 pub mod rasterizer;
 pub mod shaper;
 
-use crate::font::loader::allsorts::load_built_in_font;
+use crate::font::loader::parser::load_built_in_font;
 use crate::font::rasterizer::FontRasterizer;
 pub use crate::font::rasterizer::{FontMetrics, RasterizedGlyph};
 use crate::font::shaper::FontShaper;
