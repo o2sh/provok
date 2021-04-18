@@ -8,9 +8,9 @@
     "words": [
         {
             "text": "\"PROVOK\"",
-            "canvas_color": "#ffffff",
-            "fg_color": "#ffffff",
-            "bold": true,
+            "canvas_color": "#0A1332",
+            "fg_color": "#ff0000",
+            "bold": true
         },
 ...
 }
