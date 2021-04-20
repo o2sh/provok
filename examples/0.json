@@ -3,8 +3,8 @@
     "words": [
         {
             "text": "\"PROVOK\"",
-            "canvas_color": "#0A1332",
-            "fg_color": "#ff0000",
+            "canvas_color": "#235487",
+            "fg_color": "#E57B74",
             "bold": true
         },
         {
@@ -14,9 +14,21 @@
             "bold": true
         },
         {
+            "text": "उकसाने के लिए",
+            "canvas_color": "#FFA141",
+            "fg_color": "#000060",
+            "bold": true
+        },
+        {
+            "text": "провоцировать",
+            "canvas_color": "#B5364A",
+            "fg_color": "#DFDFBF",
+            "bold": true
+        },
+        {
             "text": "เพื่อกระตุ้น",
-            "canvas_color": "#006E3F",
-            "fg_color": "#D70B17",
+            "canvas_color": "#66C89B",
+            "fg_color": "#D4FDA2",
             "bold": true
         },
         {
@@ -24,18 +36,6 @@
             "canvas_color": "#D53071",
             "fg_color": "#008165",
             "bg_color": "#E03427",
-            "bold": true
-        },
-        {
-            "text": "провоцировать",
-            "canvas_color": "#E70012",
-            "fg_color": "#000000",
-            "bold": true
-        },
-        {
-            "text": "उकसाने के लिए",
-            "canvas_color": "#FFA141",
-            "fg_color": "#000060",
             "bold": true
         }
     ]
