@@ -1,4 +1,4 @@
-use crate::font::ftwrap;
+use crate::font::loader::FontDataHandle;
 use crate::utils::PixelLength;
 use failure::Fallible;
 
@@ -25,6 +25,10 @@ pub trait FontRasterizer {
     fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph>;
 }
 
-pub fn new_rasterizer(face: ftwrap::Face) -> Fallible<Box<dyn FontRasterizer>> {
-    Ok(Box::new(freetype::FreeTypeRasterizer::new(face)?))
+pub fn new_rasterizer(
+    font_data_handle: &FontDataHandle,
+    font_size: f64,
+    dpi: u32,
+) -> Fallible<Box<dyn FontRasterizer>> {
+    Ok(Box::new(freetype::FreeTypeRasterizer::new(font_data_handle, font_size, dpi)?))
 }

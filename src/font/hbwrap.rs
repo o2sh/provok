@@ -15,14 +15,6 @@ extern "C" {
     pub fn hb_ft_font_create_referenced(face: freetype::freetype::FT_Face) -> *mut hb_font_t;
 }
 
-pub fn language_from_string(s: &str) -> Result<hb_language_t, Error> {
-    unsafe {
-        let lang = hb_language_from_string(s.as_ptr() as *const i8, s.len() as i32);
-        ensure!(!lang.is_null(), "failed to convert {} to language");
-        Ok(lang)
-    }
-}
-
 pub fn feature_from_string(s: &str) -> Result<hb_feature_t, Error> {
     unsafe {
         let mut feature = mem::zeroed();
@@ -83,22 +75,8 @@ impl Buffer {
         Ok(Buffer { buf })
     }
 
-    pub fn set_direction(&mut self, direction: hb_direction_t) {
-        unsafe {
-            hb_buffer_set_direction(self.buf, direction);
-        }
-    }
-
-    pub fn set_script(&mut self, script: hb_script_t) {
-        unsafe {
-            hb_buffer_set_script(self.buf, script);
-        }
-    }
-
-    pub fn set_language(&mut self, lang: hb_language_t) {
-        unsafe {
-            hb_buffer_set_language(self.buf, lang);
-        }
+    pub fn guess_segment_properties(&mut self) {
+        unsafe { hb_buffer_guess_segment_properties(self.buf) };
     }
 
     pub fn add_utf8(&mut self, buf: &[u8]) {

@@ -96,7 +96,7 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Fallible
 
         font_info.push((
             names,
-            FontDataHandle::Memory { data: data.to_vec(), name: name.to_string(), index: 0 },
+            FontDataHandle { data: data.to_vec(), name: name.to_string(), index: 0 },
         ));
     }
 

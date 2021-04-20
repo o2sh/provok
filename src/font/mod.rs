@@ -25,7 +25,7 @@ pub struct LoadedFont {
 
 impl LoadedFont {
     pub fn shape(&self, word: &Word) -> Fallible<Vec<GlyphInfo>> {
-        self.shaper.shape(&word.text, word.hb_script, word.hb_direction, &word.hb_lang)
+        self.shaper.shape(&word.text)
     }
 
     pub fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {
@@ -34,7 +34,6 @@ impl LoadedFont {
 }
 
 pub struct FontConfiguration {
-    lib: ftwrap::Library,
     fonts: RefCell<HashMap<TextStyle, Rc<LoadedFont>>>,
     font_size: f64,
     dpi: u32,
@@ -42,8 +41,7 @@ pub struct FontConfiguration {
 
 impl FontConfiguration {
     pub fn new(font_size: f64, dpi: u32) -> Fallible<Self> {
-        let lib = ftwrap::Library::new()?;
-        Ok(Self { lib, fonts: RefCell::new(HashMap::new()), font_size, dpi })
+        Ok(Self { fonts: RefCell::new(HashMap::new()), font_size, dpi })
     }
 
     pub fn get_font(&self, style: &TextStyle) -> Fallible<Rc<LoadedFont>> {
@@ -53,12 +51,8 @@ impl FontConfiguration {
             return Ok(Rc::clone(entry));
         }
         let font_data_handle = load_built_in_font(&style.font_attributes)?;
-
-        let mut face = self.lib.face_from_locator(&font_data_handle)?;
-        face.set_font_size(self.font_size, self.dpi)?;
-        let shaper = shaper::new_shaper(&face)?;
-        let rasterizer = rasterizer::new_rasterizer(face)?;
-
+        let shaper = shaper::new_shaper(&font_data_handle, self.font_size, self.dpi)?;
+        let rasterizer = rasterizer::new_rasterizer(&font_data_handle, self.font_size, self.dpi)?;
         let loaded = Rc::new(LoadedFont { rasterizer, shaper });
 
         fonts.insert(style.clone(), Rc::clone(&loaded));

@@ -11,6 +11,8 @@ pub struct Names {
 }
 
 #[derive(Clone, PartialEq, Eq)]
-pub enum FontDataHandle {
-    Memory { name: String, data: Vec<u8>, index: u32 },
+pub struct FontDataHandle {
+    pub name: String,
+    pub data: Vec<u8>,
+    pub index: u32,
 }

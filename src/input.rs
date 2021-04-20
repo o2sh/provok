@@ -36,9 +36,6 @@ pub struct Config {
 pub struct Word {
     pub text: String,
     pub canvas_color: RgbColor,
-    pub hb_direction: u32,
-    pub hb_script: u32,
-    pub hb_lang: String,
     pub style: TextStyle,
 }
 
@@ -51,9 +48,7 @@ pub struct TextStyle {
 #[derive(Debug, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct FontAttributes {
     pub family: String,
-    #[serde(default)]
     pub bold: bool,
-    #[serde(default)]
     pub italic: bool,
 }
 
@@ -76,9 +71,6 @@ impl Input {
             let lang = detector.detect_language_of(&word_json.text).unwrap();
             words.push(Word {
                 text: String::from(&word_json.text),
-                hb_direction: language::get_hb_direction(&lang),
-                hb_script: language::get_hb_script(&lang),
-                hb_lang: language::get_hb_lang(&lang).into(),
                 canvas_color: RgbColor::from_named_or_rgb_string(&word_json.canvas_color).unwrap(),
                 style: TextStyle {
                     fg_color: RgbColor::from_named_or_rgb_string(&word_json.fg_color).unwrap(),

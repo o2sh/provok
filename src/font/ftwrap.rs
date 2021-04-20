@@ -165,11 +165,7 @@ impl Library {
     }
 
     pub fn face_from_locator(&self, handle: &FontDataHandle) -> Fallible<Face> {
-        match handle {
-            FontDataHandle::Memory { data, index, .. } => {
-                self.new_face_from_slice(&data, *index as _)
-            }
-        }
+        self.new_face_from_slice(&handle.data, handle.index as _)
     }
 
     pub fn new_face_from_slice(&self, data: &[u8], face_index: FT_Long) -> Fallible<Face> {

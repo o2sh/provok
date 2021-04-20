@@ -1,3 +1,4 @@
+use crate::font::loader::FontDataHandle;
 use crate::font::rasterizer::FontRasterizer;
 use crate::font::{ftwrap, RasterizedGlyph};
 use crate::utils::PixelLength;
@@ -7,6 +8,7 @@ use std::cell::RefCell;
 use std::slice;
 
 pub struct FreeTypeRasterizer {
+    _lib: ftwrap::Library,
     face: RefCell<ftwrap::Face>,
 }
 
@@ -56,7 +58,10 @@ impl FreeTypeRasterizer {
         }
     }
 
-    pub fn new(face: ftwrap::Face) -> Fallible<Self> {
-        Ok(Self { face: RefCell::new(face) })
+    pub fn new(font_data_handle: &FontDataHandle, font_size: f64, dpi: u32) -> Fallible<Self> {
+        let lib = ftwrap::Library::new()?;
+        let mut face = lib.face_from_locator(&font_data_handle)?;
+        face.set_font_size(font_size, dpi)?;
+        Ok(Self { _lib: lib, face: RefCell::new(face) })
     }
 }

@@ -1,5 +1,6 @@
 use crate::font::ftwrap;
 use crate::font::hbwrap as harfbuzz;
+use crate::font::loader::FontDataHandle;
 use crate::font::shaper::{FontShaper, GlyphInfo};
 use crate::utils::PixelLength;
 use failure::Fallible;
@@ -23,36 +24,20 @@ fn make_glyphinfo(info: &Info) -> GlyphInfo {
 
 pub struct HarfbuzzShaper {
     font: RefCell<harfbuzz::Font>,
-}
-
-impl HarfbuzzShaper {
-    pub fn new(face: &ftwrap::Face) -> Fallible<Self> {
-        let mut font = harfbuzz::Font::new(face.face);
-        let (load_flags, _) = ftwrap::compute_load_flags();
-        font.set_load_flags(load_flags);
-        Ok(Self { font: RefCell::new(font) })
-    }
+    _lib: ftwrap::Library,
 }
 
 impl FontShaper for HarfbuzzShaper {
-    fn shape(
-        &self,
-        text: &str,
-        hb_script: u32,
-        hb_direction: u32,
-        hb_lang: &str,
-    ) -> Fallible<Vec<GlyphInfo>> {
+    fn shape(&self, text: &str) -> Fallible<Vec<GlyphInfo>> {
         let features = vec![
             harfbuzz::feature_from_string("kern")?,
             harfbuzz::feature_from_string("liga")?,
             harfbuzz::feature_from_string("clig")?,
         ];
         let mut buf = harfbuzz::Buffer::new()?;
-        buf.set_script(hb_script);
-        buf.set_direction(hb_direction);
-        buf.set_language(harfbuzz::language_from_string(hb_lang)?);
         buf.add_str(text);
 
+        buf.guess_segment_properties();
         let mut font = self.font.borrow_mut();
         font.shape(&mut buf, features.as_slice());
 
@@ -68,5 +53,17 @@ impl FontShaper for HarfbuzzShaper {
         }
 
         Ok(cluster)
+    }
+}
+
+impl HarfbuzzShaper {
+    pub fn new(font_data_handle: &FontDataHandle, font_size: f64, dpi: u32) -> Fallible<Self> {
+        let lib = ftwrap::Library::new()?;
+        let mut face = lib.face_from_locator(&font_data_handle)?;
+        face.set_font_size(font_size, dpi)?;
+        let mut font = harfbuzz::Font::new(face.face);
+        let (load_flags, _) = ftwrap::compute_load_flags();
+        font.set_load_flags(load_flags);
+        Ok(Self { _lib: lib, font: RefCell::new(font) })
     }
 }
