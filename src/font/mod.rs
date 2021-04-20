@@ -15,8 +15,7 @@ use crate::font::rasterizer::FontRasterizer;
 pub use crate::font::rasterizer::{FontMetrics, RasterizedGlyph};
 use crate::font::shaper::FontShaper;
 pub use crate::font::shaper::GlyphInfo;
-
-use crate::input::{TextStyle, Word};
+use crate::input::TextStyle;
 
 pub struct LoadedFont {
     rasterizer: Box<dyn FontRasterizer>,
@@ -24,8 +23,8 @@ pub struct LoadedFont {
 }
 
 impl LoadedFont {
-    pub fn shape(&self, word: &Word) -> Fallible<Vec<GlyphInfo>> {
-        self.shaper.shape(&word.text)
+    pub fn shape(&self, text: &str) -> Fallible<Vec<GlyphInfo>> {
+        self.shaper.shape(text)
     }
 
     pub fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {

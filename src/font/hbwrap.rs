@@ -78,6 +78,9 @@ impl Buffer {
     pub fn guess_segment_properties(&mut self) {
         unsafe { hb_buffer_guess_segment_properties(self.buf) };
     }
+    pub fn get_script(&self) -> hb_script_t {
+        unsafe { hb_buffer_get_script(self.buf) }
+    }
 
     pub fn add_utf8(&mut self, buf: &[u8]) {
         unsafe {

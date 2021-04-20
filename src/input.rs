@@ -1,7 +1,7 @@
 use crate::color::RgbColor;
+use crate::font::hbwrap as harfbuzz;
 use crate::language;
 use failure::Fallible;
-use lingua::{Language, LanguageDetector, LanguageDetectorBuilder};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
@@ -54,33 +54,25 @@ pub struct FontAttributes {
 
 impl Input {
     pub fn new(path: &str) -> Fallible<Self> {
-        let languages = vec![
-            Language::English,
-            Language::Hindi,
-            Language::Russian,
-            Language::Arabic,
-            Language::Thai,
-            Language::Chinese,
-            Language::Japanese,
-        ];
-        let detector: LanguageDetector =
-            LanguageDetectorBuilder::from_languages(&languages).build();
         let input_json = InputJson::parse(path)?;
         let mut words: Vec<Word> = Vec::new();
         for word_json in input_json.words.iter() {
-            let lang = detector.detect_language_of(&word_json.text).unwrap();
+            let mut buf = harfbuzz::Buffer::new()?;
+            buf.add_str(&word_json.text);
+            buf.guess_segment_properties();
+            let hb_script = buf.get_script();
             words.push(Word {
                 text: String::from(&word_json.text),
                 canvas_color: RgbColor::from_named_or_rgb_string(&word_json.canvas_color).unwrap(),
                 style: TextStyle {
                     fg_color: RgbColor::from_named_or_rgb_string(&word_json.fg_color).unwrap(),
                     font_attributes: FontAttributes {
-                        family: language::get_font(&lang).into(),
+                        family: language::get_font(&hb_script).into(),
                         bold: word_json.bold.unwrap_or(false),
                         italic: word_json.italic.unwrap_or(false),
                     },
                 },
-            })
+            });
         }
 
         Ok(Self { config: Config { font_size: input_json.font_size as f64, dpi: 96 }, words })

@@ -14,16 +14,16 @@
             "bold": true
         },
         {
+            "text": "เพื่อกระตุ้น",
+            "canvas_color": "#006E3F",
+            "fg_color": "#D70B17",
+            "bold": true
+        },
+        {
             "text": "去挑衅",
             "canvas_color": "#D53071",
             "fg_color": "#008165",
             "bg_color": "#E03427",
-            "bold": true
-        },
-        {
-            "text": "挑発する",
-            "canvas_color": "#006E3F",
-            "fg_color": "#D70B17",
             "bold": true
         },
         {

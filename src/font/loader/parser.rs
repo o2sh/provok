@@ -52,10 +52,6 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Fallible
     for (data, name) in &[
         font!("../../../assets/fonts/noto/NotoSansArabic-Bold.ttf"),
         font!("../../../assets/fonts/noto/NotoSansArabic-Regular.ttf"),
-        font!("../../../assets/fonts/noto/NotoSansJP-Bold.otf"),
-        font!("../../../assets/fonts/noto/NotoSansJP-Regular.otf"),
-        font!("../../../assets/fonts/noto/NotoSansThai-Bold.ttf"),
-        font!("../../../assets/fonts/noto/NotoSansThai-Regular.ttf"),
         font!("../../../assets/fonts/noto/NotoSansSC-Bold.otf"),
         font!("../../../assets/fonts/noto/NotoSansSC-Regular.otf"),
         font!("../../../assets/fonts/noto/NotoSansDevanagari-Bold.ttf"),
@@ -64,6 +60,10 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Fallible
         font!("../../../assets/fonts/noto/NotoSans-BoldItalic.ttf"),
         font!("../../../assets/fonts/noto/NotoSans-Italic.ttf"),
         font!("../../../assets/fonts/noto/NotoSans-Regular.ttf"),
+        font!("../../../assets/fonts/noto/NotoSansThai-Bold.ttf"),
+        font!("../../../assets/fonts/noto/NotoSansThai-Regular.ttf"),
+        font!("../../../assets/fonts/siliguri/HindSiliguri-Bold.ttf"),
+        font!("../../../assets/fonts/siliguri/HindSiliguri-Regular.ttf"),
     ] {
         let face = ttf_parser::Face::from_slice(&data, 0)?;
         let full_name = face

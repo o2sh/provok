@@ -177,7 +177,7 @@ fn render_text(
     let fg_color = color::to_tuple_rgba(word.style.fg_color);
 
     let font = fontconfig.get_font(&word.style)?;
-    let glyph_infos = font.shape(&word)?;
+    let glyph_infos = font.shape(&word.text)?;
     let total_width = glyph_infos.iter().fold(0., |acc, info| acc + info.x_advance.get() as f32);
     let mut x = -total_width / 2.;
     let mut y = 0.;
