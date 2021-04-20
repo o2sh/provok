@@ -29,14 +29,16 @@ pub fn compute_load_flags() -> (i32, FT_Render_Mode) {
 }
 
 pub struct Face {
+    _lib: FT_Library,
     pub face: FT_Face,
     _bytes: Vec<u8>,
 }
 
 impl Drop for Face {
     fn drop(&mut self) {
-        unsafe {
-            FT_Done_Face(self.face);
+        let err = unsafe { FT_Done_Face(self.face) };
+        if err != freetype::freetype::FT_Err_Ok as FT_Error {
+            panic!("Failed to drop face");
         }
     }
 }
@@ -116,26 +118,30 @@ impl Library {
         Ok(lib)
     }
 
-    pub fn face_from_locator(&self, handle: &FontDataHandle) -> Fallible<Face> {
-        self.new_face_from_slice(&handle.data, handle.index as _)
+    pub fn new_face(&self, handle: &FontDataHandle) -> Fallible<Face> {
+        let res = unsafe { self.new_memory_face(self.lib, handle) };
+        res
     }
-
-    pub fn new_face_from_slice(&self, data: &[u8], face_index: FT_Long) -> Fallible<Face> {
-        let data = data.to_vec();
+    pub unsafe fn new_memory_face(
+        &self,
+        library_raw: FT_Library,
+        handle: &FontDataHandle,
+    ) -> Fallible<Face> {
+        FT_Reference_Library(library_raw);
+        let data = handle.data.to_vec();
         let mut face = ptr::null_mut();
 
-        let res = unsafe {
-            FT_New_Memory_Face(
-                self.lib,
-                data.as_ptr(),
-                data.len() as _,
-                face_index,
-                &mut face as *mut _,
-            )
-        };
+        let res = FT_New_Memory_Face(
+            self.lib,
+            data.as_ptr(),
+            data.len() as _,
+            handle.index as _,
+            &mut face as *mut _,
+        );
         Ok(Face {
+            _lib: library_raw,
             face: ft_result(res, face)
-                .with_context(|_| format!("FT_New_Memory_Face for index {}", face_index))?,
+                .with_context(|_| format!("FT_New_Memory_Face for index {}", handle.index))?,
             _bytes: data,
         })
     }

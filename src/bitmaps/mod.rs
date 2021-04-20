@@ -11,7 +11,6 @@ pub type TextureSize = euclid::Size2D<f32, TextureUnit>;
 
 pub trait Texture2d {
     fn write(&self, rect: Rect, im: &dyn BitmapImage);
-    fn read(&self, rect: Rect, im: &mut dyn BitmapImage);
     fn width(&self) -> usize;
     fn height(&self) -> usize;
     fn to_texture_coords(&self, coords: Rect) -> TextureRect {
@@ -63,10 +62,6 @@ impl Texture2d for SrgbTexture2d {
             },
             source,
         )
-    }
-
-    fn read(&self, _rect: Rect, _im: &mut dyn BitmapImage) {
-        unimplemented!();
     }
 
     fn width(&self) -> usize {

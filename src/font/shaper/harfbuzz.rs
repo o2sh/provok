@@ -59,7 +59,7 @@ impl FontShaper for HarfbuzzShaper {
 impl HarfbuzzShaper {
     pub fn new(font_data_handle: &FontDataHandle, font_size: f64, dpi: u32) -> Fallible<Self> {
         let lib = ftwrap::Library::new()?;
-        let mut face = lib.face_from_locator(&font_data_handle)?;
+        let mut face = lib.new_face(&font_data_handle)?;
         face.set_font_size(font_size, dpi)?;
         let mut font = harfbuzz::Font::new(face.face);
         let (load_flags, _) = ftwrap::compute_load_flags();
