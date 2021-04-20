@@ -86,7 +86,6 @@ pub trait BitmapImage {
     fn pixels(&self) -> &[u32] {
         let (width, height) = self.image_dimensions();
         unsafe {
-            #[allow(clippy::cast_ptr_alignment)]
             let first = self.pixel_data() as *const u32;
             std::slice::from_raw_parts(first, width * height)
         }
@@ -97,12 +96,6 @@ pub struct Image {
     data: Vec<u8>,
     width: usize,
     height: usize,
-}
-
-impl Into<Vec<u8>> for Image {
-    fn into(self) -> Vec<u8> {
-        self.data
-    }
 }
 
 impl Image {

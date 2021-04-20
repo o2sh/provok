@@ -31,7 +31,6 @@ pub fn compute_load_flags() -> (i32, FT_Render_Mode) {
 pub struct Face {
     pub face: FT_Face,
     _bytes: Vec<u8>,
-    size: Option<FaceSize>,
 }
 
 impl Drop for Face {
@@ -42,33 +41,10 @@ impl Drop for Face {
     }
 }
 
-struct FaceSize {
-    size: f64,
-    dpi: u32,
-    cell_width: f64,
-    cell_height: f64,
-}
-
 impl Face {
-    pub fn set_font_size(&mut self, point_size: f64, dpi: u32) -> Fallible<(f64, f64)> {
-        if let Some(face_size) = self.size.as_ref() {
-            if face_size.size == point_size && face_size.dpi == dpi {
-                return Ok((face_size.cell_width, face_size.cell_height));
-            }
-        }
-
+    pub fn set_font_size(&mut self, point_size: f64, dpi: u32) -> Fallible<()> {
         let size = (point_size * 64.0) as FT_F26Dot6;
-
-        let (cell_width, cell_height) = match self.set_char_size(size, 0, dpi, 0) {
-            Ok(_) => self.cell_metrics(),
-            Err(err) => {
-                return Err(err);
-            }
-        };
-
-        self.size.replace(FaceSize { size: point_size, dpi, cell_width, cell_height });
-
-        Ok((cell_width, cell_height))
+        self.set_char_size(size, 0, dpi, 0)
     }
 
     fn set_char_size(
@@ -102,30 +78,6 @@ impl Face {
             let res = FT_Load_Glyph(self.face, glyph_index, load_flags);
             let slot = ft_result(res, &mut *(*self.face).glyph)?;
             ft_result(FT_Render_Glyph(slot, render_mode), slot)
-        }
-    }
-
-    pub fn cell_metrics(&mut self) -> (f64, f64) {
-        unsafe {
-            let metrics = &(*(*self.face).size).metrics;
-            let height = (metrics.y_scale as f64 * f64::from((*self.face).height))
-                / (f64::from(0x1_0000) * 64.0);
-
-            let mut width = 0.0;
-            for i in 32..128 {
-                let glyph_pos = FT_Get_Char_Index(self.face, i);
-                if glyph_pos == 0 {
-                    continue;
-                }
-                let res = FT_Load_Glyph(self.face, glyph_pos, FT_LOAD_COLOR as i32);
-                if succeeded(res) {
-                    let glyph = &(*(*self.face).glyph);
-                    if glyph.metrics.horiAdvance as f64 > width {
-                        width = glyph.metrics.horiAdvance as f64;
-                    }
-                }
-            }
-            (width / 64.0, height)
         }
     }
 }
@@ -185,7 +137,6 @@ impl Library {
             face: ft_result(res, face)
                 .with_context(|_| format!("FT_New_Memory_Face for index {}", face_index))?,
             _bytes: data,
-            size: None,
         })
     }
 
