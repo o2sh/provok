@@ -28,10 +28,24 @@ pub fn compute_load_flags() -> (i32, FT_Render_Mode) {
     (flags as i32, render)
 }
 
+impl Clone for Face {
+    fn clone(&self) -> Self {
+        let err = unsafe { FT_Reference_Library(self.lib) };
+        if err != freetype::freetype::FT_Err_Ok as FT_Error {
+            panic!("Failed to reference library");
+        }
+        let err = unsafe { FT_Reference_Face(self.face) };
+        if err != freetype::freetype::FT_Err_Ok as FT_Error {
+            panic!("Failed to reference face");
+        }
+        Face { lib: self.lib, face: self.face, bytes: self.bytes.clone() }
+    }
+}
+
 pub struct Face {
-    _lib: FT_Library,
+    lib: FT_Library,
     pub face: FT_Face,
-    _bytes: Vec<u8>,
+    bytes: Vec<u8>,
 }
 
 impl Drop for Face {
@@ -39,6 +53,10 @@ impl Drop for Face {
         let err = unsafe { FT_Done_Face(self.face) };
         if err != freetype::freetype::FT_Err_Ok as FT_Error {
             panic!("Failed to drop face");
+        }
+        let err = unsafe { FT_Done_Library(self.lib) };
+        if err != freetype::freetype::FT_Err_Ok as FT_Error {
+            panic!("Failed to drop library")
         }
     }
 }
@@ -139,10 +157,10 @@ impl Library {
             &mut face as *mut _,
         );
         Ok(Face {
-            _lib: library_raw,
+            lib: library_raw,
             face: ft_result(res, face)
                 .with_context(|_| format!("FT_New_Memory_Face for index {}", handle.index))?,
-            _bytes: data,
+            bytes: data,
         })
     }
 

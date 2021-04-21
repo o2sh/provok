@@ -1,4 +1,4 @@
-use crate::font::loader::FontDataHandle;
+use crate::font::ftwrap;
 use crate::utils::PixelLength;
 use failure::Fallible;
 
@@ -17,10 +17,6 @@ pub trait FontShaper {
     fn shape(&self, text: &str) -> Fallible<Vec<GlyphInfo>>;
 }
 
-pub fn new_shaper(
-    font_data_handle: &FontDataHandle,
-    font_size: f64,
-    dpi: u32,
-) -> Fallible<Box<dyn FontShaper>> {
-    Ok(Box::new(harfbuzz::HarfbuzzShaper::new(font_data_handle, font_size, dpi)?))
+pub fn new_shaper(face: &ftwrap::Face) -> Fallible<Box<dyn FontShaper>> {
+    Ok(Box::new(harfbuzz::HarfbuzzShaper::new(face)?))
 }
