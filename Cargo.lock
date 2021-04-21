@@ -1100,6 +1100,7 @@ dependencies = [
  "freetype",
  "glium",
  "harfbuzz-sys",
+ "libc",
  "log",
  "palette",
  "serde",

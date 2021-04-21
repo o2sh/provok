@@ -1,7 +1,9 @@
 use crate::font::loader::FontDataHandle;
 use failure::{format_err, Fallible, ResultExt};
 pub use freetype::freetype::*;
+use libc::{self, c_long, c_void, size_t};
 use std::ptr;
+use std::rc::Rc;
 
 #[inline]
 pub fn succeeded(error: FT_Error) -> bool {
@@ -45,7 +47,7 @@ impl Clone for Face {
 pub struct Face {
     lib: FT_Library,
     pub face: FT_Face,
-    bytes: Vec<u8>,
+    bytes: Rc<Vec<u8>>,
 }
 
 impl Drop for Face {
@@ -102,6 +104,30 @@ impl Face {
     }
 }
 
+extern "C" fn alloc_library(_memory: FT_Memory, size: c_long) -> *mut c_void {
+    unsafe { libc::malloc(size as size_t) }
+}
+
+extern "C" fn free_library(_memory: FT_Memory, block: *mut c_void) {
+    unsafe { libc::free(block) }
+}
+
+extern "C" fn realloc_library(
+    _memory: FT_Memory,
+    _cur_size: c_long,
+    new_size: c_long,
+    block: *mut c_void,
+) -> *mut c_void {
+    unsafe { libc::realloc(block, new_size as size_t) }
+}
+
+static mut MEMORY: FT_MemoryRec_ = FT_MemoryRec_ {
+    user: 0 as *mut c_void,
+    alloc: Some(alloc_library),
+    free: Some(free_library),
+    realloc: Some(realloc_library),
+};
+
 pub struct Library {
     lib: FT_Library,
 }
@@ -109,7 +135,7 @@ pub struct Library {
 impl Drop for Library {
     fn drop(&mut self) {
         unsafe {
-            FT_Done_FreeType(self.lib);
+            FT_Done_Library(self.lib);
         }
     }
 }
@@ -117,23 +143,16 @@ impl Drop for Library {
 impl Library {
     pub fn new() -> Fallible<Library> {
         let mut lib = ptr::null_mut();
-        let res = unsafe { FT_Init_FreeType(&mut lib as *mut _) };
-        let lib = ft_result(res, lib).context("FT_Init_FreeType")?;
-        let mut lib = Library { lib };
 
-        let interpreter_version: FT_UInt = 38;
-        unsafe {
-            FT_Property_Set(
-                lib.lib,
-                b"truetype\0" as *const u8 as *const FT_String,
-                b"interpreter-version\0" as *const u8 as *const FT_String,
-                &interpreter_version as *const FT_UInt as *const _,
-            );
+        let err = unsafe { FT_New_Library(&mut MEMORY, &mut lib) };
+        if err == freetype::freetype::FT_Err_Ok as FT_Error {
+            unsafe {
+                FT_Add_Default_Modules(lib);
+            }
+            Ok(Library { lib })
+        } else {
+            panic!("failed to create new library")
         }
-
-        lib.set_lcd_filter(FT_LcdFilter::FT_LCD_FILTER_DEFAULT).ok();
-
-        Ok(lib)
     }
 
     pub fn new_face(&self, handle: &FontDataHandle) -> Fallible<Face> {
@@ -145,8 +164,7 @@ impl Library {
         library_raw: FT_Library,
         handle: &FontDataHandle,
     ) -> Fallible<Face> {
-        FT_Reference_Library(library_raw);
-        let data = handle.data.to_vec();
+        let data = Rc::new(handle.data.to_vec());
         let mut face = ptr::null_mut();
 
         let res = FT_New_Memory_Face(
@@ -156,15 +174,12 @@ impl Library {
             handle.index as _,
             &mut face as *mut _,
         );
+        FT_Reference_Library(library_raw);
         Ok(Face {
             lib: library_raw,
             face: ft_result(res, face)
                 .with_context(|_| format!("FT_New_Memory_Face for index {}", handle.index))?,
             bytes: data,
         })
-    }
-
-    pub fn set_lcd_filter(&mut self, filter: FT_LcdFilter) -> Fallible<()> {
-        unsafe { ft_result(FT_Library_SetLcdFilter(self.lib, filter), ()) }
     }
 }
