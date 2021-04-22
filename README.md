@@ -25,10 +25,11 @@ Provok is fed with a [JSON file](./examples/0.json) that consists of an array of
 
 ## How To Use
 
-You can either build from source and use `cargo run`, or:
-
 ```bash
-cargo intall provok
+git clone https://github.com/o2sh/provok
+cd provok
+cargo run
+
 provok 
 ```
 
