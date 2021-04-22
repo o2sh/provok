@@ -23,7 +23,6 @@ fn make_glyphinfo(info: &Info) -> GlyphInfo {
 
 pub struct HarfbuzzShaper {
     font: RefCell<harfbuzz::Font>,
-    _face: ftwrap::Face,
 }
 
 impl FontShaper for HarfbuzzShaper {
@@ -57,10 +56,9 @@ impl FontShaper for HarfbuzzShaper {
 
 impl HarfbuzzShaper {
     pub fn new(face: &ftwrap::Face) -> Fallible<Self> {
-        let cloned_face = face.clone();
-        let mut font = harfbuzz::Font::new(cloned_face.face);
+        let mut font = harfbuzz::Font::new(face.face);
         let (load_flags, _) = ftwrap::compute_load_flags();
         font.set_load_flags(load_flags);
-        Ok(Self { _face: cloned_face, font: RefCell::new(font) })
+        Ok(Self { font: RefCell::new(font) })
     }
 }

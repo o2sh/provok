@@ -37,24 +37,16 @@ pub struct FontConfiguration {
     font_size: f64,
     dpi: u32,
     lib: ftwrap::Library,
-    faces: RefCell<Vec<ftwrap::Face>>,
 }
 
 impl FontConfiguration {
     pub fn new(font_size: f64, dpi: u32) -> Fallible<Self> {
         let lib = ftwrap::Library::new()?;
-        Ok(Self {
-            fonts: RefCell::new(HashMap::new()),
-            font_size,
-            dpi,
-            lib,
-            faces: RefCell::new(vec![]),
-        })
+        Ok(Self { fonts: RefCell::new(HashMap::new()), font_size, dpi, lib })
     }
 
     pub fn get_font(&self, style: &TextStyle) -> Fallible<Rc<LoadedFont>> {
         let mut fonts = self.fonts.borrow_mut();
-        let mut faces = self.faces.borrow_mut();
         if let Some(entry) = fonts.get(style) {
             return Ok(Rc::clone(entry));
         }
@@ -65,7 +57,6 @@ impl FontConfiguration {
         let rasterizer = rasterizer::new_rasterizer(&face)?;
         let loaded = Rc::new(LoadedFont { rasterizer, shaper });
 
-        faces.push(face);
         fonts.insert(style.clone(), Rc::clone(&loaded));
 
         Ok(loaded)
