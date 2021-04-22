@@ -6,7 +6,7 @@ Text Renderer written in Rust using HarfBuzz for shaping, FreeType for rasteriza
 
 ## Input
 
-Provok is fed with a [JSON file](./examples/0.json) that consists of an array of words alongside their display parameters (fg_color, boldness, italic, etc.):
+Provok is fed with a [JSON file](./examples/0.json) that consists of an array of word alongside their display parameters (fg_color, boldness, italic, etc.):
 
 ```text
 {
