@@ -35,6 +35,8 @@ use input::{Input, Word};
 
 const ATLAS_SIZE: usize = 8192;
 
+static DEFAULT_INPUT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/0.json");
+
 static VERTEX_SHADER: &str =
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/vertex.glsl"));
 
@@ -246,7 +248,7 @@ fn main() -> Fallible<()> {
         )
         .get_matches();
 
-    let input_path = matches.value_of("input").unwrap_or("examples/0.json");
+    let input_path = matches.value_of("input").unwrap_or(DEFAULT_INPUT_FILE);
     run(input_path)?;
     Ok(())
 }
