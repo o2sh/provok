@@ -29,8 +29,6 @@ Provok is fed with a [JSON file](./examples/0.json) that consists of an array of
 git clone https://github.com/o2sh/provok
 cd provok
 cargo run
-
-provok 
 ```
 
 You can also provide your own custom input file with the --input CLI flag:
