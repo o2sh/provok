@@ -34,7 +34,7 @@ make install
 provok
 ```
 
-You can also provide your own custom input file with the --input CLI flag:
+You can also provide your own custom input file with the `--input` CLI flag:
 
 ```text
 provok -i /path/to/input-file
