@@ -25,15 +25,17 @@ Provok is fed with a [JSON file](./examples/0.json) that consists of an array of
 
 ## How To Use
 
-You can either build from source and use `cargo run`, or:
+First, install the [Rust toolchain](https://www.rust-lang.org/tools/install) and then
 
-```bash
-cargo intall provok
-provok 
+```text
+git clone https://github.com/o2sh/provok --depth=1
+cd provok 
+make install
+provok
 ```
 
 You can also provide your own custom input file with the --input CLI flag:
 
-```bash
+```text
 provok -i /path/to/input-file
 ```
