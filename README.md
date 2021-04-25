@@ -14,8 +14,9 @@ Provok is fed with a [JSON file](./examples/0.json) that consists of an array of
     "words": [
         {
             "text": "\"PROVOK\"",
-            "canvas_color": "#0A1332",
-            "fg_color": "#ff0000",
+            "canvas_color": "#D8E3F0",
+            "fg_color": "#D8E3F0",
+            "bg_color": "#15203E",
             "bold": true
         },
 ...
