@@ -28,16 +28,16 @@
             "bold": true
         },
         {
+            "text": "เพื่อกระตุ้น",
+            "canvas_color": "#66C89B",
+            "fg_color": "#D4FDA2",
+            "bold": true
+        },
+        {
             "text": "去挑衅",
             "canvas_color": "#D53071",
             "fg_color": "#008165",
             "bg_color": "#E03427",
-            "bold": true
-        },
-        {
-            "text": "เพื่อกระตุ้น",
-            "canvas_color": "#66C89B",
-            "fg_color": "#D4FDA2",
             "bold": true
         }
     ]
