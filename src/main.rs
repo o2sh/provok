@@ -33,6 +33,8 @@ use font::FontConfiguration;
 use glyph_atlas::GlyphAtlas;
 use input::{Input, Word};
 
+const PADDING: f32 = 15.;
+
 const ATLAS_SIZE: usize = 8192;
 
 static DEFAULT_INPUT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/0.json");
@@ -53,9 +55,11 @@ pub struct Vertex {
     pub position: (f32, f32),
     pub tex: (f32, f32),
     pub fg_color: (f32, f32, f32, f32),
+    pub bg_color: (f32, f32, f32, f32),
 }
 
-implement_vertex!(Vertex, position, tex, fg_color);
+implement_vertex!(Vertex, position, tex, fg_color, bg_color);
+
 pub fn compile_shaders(display: &Display) -> Fallible<glium::Program> {
     let glyph_source = glium::program::ProgramCreationInput::SourceCode {
         vertex_shader: VERTEX_SHADER,
@@ -138,8 +142,6 @@ fn paint(
         1.0,
     );
     let mut glyph_atlas = GlyphAtlas::new(display, ATLAS_SIZE)?;
-    let (glyph_vertex_buffer, glyph_index_buffer) =
-        render_text(word, display, &mut glyph_atlas, fontconfig)?;
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
         -(window_width as f32) / 2.0,
         window_width as f32 / 2.0,
@@ -149,10 +151,29 @@ fn paint(
         1.0,
     )
     .to_arrays();
-    let tex = glyph_atlas.atlas.texture();
 
     let draw_params =
         glium::DrawParameters { blend: glium::Blend::alpha_blending(), ..Default::default() };
+
+    let (mut glyph_vertex_buffer, glyph_index_buffer) =
+        compute_glyph_vertices(word, display, &mut glyph_atlas, fontconfig)?;
+
+    if let Some(bg_color) = word.style.bg_color {
+        let (bg_glyph_vertex_buffer, bg_glyph_index_buffer) =
+            compute_bg_glyph_vertices(bg_color, &mut glyph_vertex_buffer, display)?;
+        frame.draw(
+            &bg_glyph_vertex_buffer,
+            &bg_glyph_index_buffer,
+            &program,
+            &uniform! {
+                projection: projection,
+                draw_bg: true
+            },
+            &draw_params,
+        )?;
+    }
+
+    let tex = glyph_atlas.atlas.texture();
 
     frame.draw(
         &glyph_vertex_buffer,
@@ -161,6 +182,7 @@ fn paint(
         &uniform! {
             projection: projection,
             glyph_tex: &*tex,
+            draw_bg: false
         },
         &draw_params,
     )?;
@@ -168,7 +190,47 @@ fn paint(
     Ok(())
 }
 
-fn render_text(
+fn compute_bg_glyph_vertices(
+    bg_color: color::RgbColor,
+    glyph_vertex_buffer: &mut VertexBuffer<Vertex>,
+    display: &Display,
+) -> Fallible<(VertexBuffer<Vertex>, IndexBuffer<u32>)> {
+    let bg_color = color::to_tuple_rgba(bg_color);
+    let mut verts = Vec::new();
+    let mut indices = Vec::new();
+    let (mut top, mut left, mut bottom, mut right) = (0f32, 0f32, 0f32, 0f32);
+    let g_verts = glyph_vertex_buffer.slice_mut(..).unwrap().map_read();
+    for v in g_verts.iter() {
+        left = left.min(v.position.0);
+        right = right.max(v.position.0);
+        top = top.min(v.position.1);
+        bottom = bottom.max(v.position.1);
+    }
+
+    left -= PADDING;
+    right += PADDING;
+    top -= PADDING;
+    bottom += PADDING;
+
+    verts.push(Vertex { position: (left, top), bg_color, ..Default::default() });
+    verts.push(Vertex { position: (right, top), bg_color, ..Default::default() });
+    verts.push(Vertex { position: (left, bottom), bg_color, ..Default::default() });
+    verts.push(Vertex { position: (right, bottom), bg_color, ..Default::default() });
+
+    indices.push(V_TOP_LEFT as u32);
+    indices.push(V_TOP_RIGHT as u32);
+    indices.push(V_BOT_LEFT as u32);
+
+    indices.push(V_TOP_RIGHT as u32);
+    indices.push(V_BOT_LEFT as u32);
+    indices.push(V_BOT_RIGHT as u32);
+
+    Ok((
+        VertexBuffer::dynamic(display, &verts)?,
+        IndexBuffer::new(display, glium::index::PrimitiveType::TrianglesList, &indices)?,
+    ))
+}
+fn compute_glyph_vertices(
     word: &Word,
     display: &Display,
     glyph_atlas: &mut GlyphAtlas<SrgbTexture2d>,
@@ -180,8 +242,8 @@ fn render_text(
 
     let font = fontconfig.get_font(&word.style)?;
     let glyph_infos = font.shape(&word.text)?;
-    let total_width = glyph_infos.iter().fold(0., |acc, info| acc + info.x_advance.get() as f32);
-    let mut x = -total_width / 2.;
+    let width = glyph_infos.iter().fold(0., |acc, info| acc + info.x_advance.get() as f32);
+    let mut x = -width / 2.;
     let mut y = 0.;
     for glyph_info in &glyph_infos {
         let rasterized_glyph = font.rasterize(glyph_info.glyph_pos)?;
@@ -200,21 +262,25 @@ fn render_text(
             position: (x0, y0),
             tex: (glyph.texture.tex_coords.min_x(), glyph.texture.tex_coords.min_y()),
             fg_color,
+            ..Default::default()
         });
         verts.push(Vertex {
             position: (x1, y0),
             tex: (glyph.texture.tex_coords.max_x(), glyph.texture.tex_coords.min_y()),
             fg_color,
+            ..Default::default()
         });
         verts.push(Vertex {
             position: (x0, y1),
             tex: (glyph.texture.tex_coords.min_x(), glyph.texture.tex_coords.max_y()),
             fg_color,
+            ..Default::default()
         });
         verts.push(Vertex {
             position: (x1, y1),
             tex: (glyph.texture.tex_coords.max_x(), glyph.texture.tex_coords.max_y()),
             fg_color,
+            ..Default::default()
         });
 
         indices.push(idx + V_TOP_LEFT as u32);
