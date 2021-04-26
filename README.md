@@ -26,7 +26,7 @@ Provok is fed with a [JSON file](./examples/0.json) that consists of an array of
 
 ## How To Use
 
-First, you need to have installed the [Rust toolchain](https://www.rust-lang.org/tools/install) and [HarfBuzz](https://harfbuzz.github.io/install-harfbuzz.html) on your machine, then:
+First, you need to have installed the [Rust toolchain](https://www.rust-lang.org/tools/install) and [HarfBuzz](https://harfbuzz.github.io) on your machine, then:
 
 ```text
 git clone https://github.com/o2sh/provok --depth=1
