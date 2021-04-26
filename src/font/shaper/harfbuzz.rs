@@ -56,9 +56,7 @@ impl FontShaper for HarfbuzzShaper {
 
 impl HarfbuzzShaper {
     pub fn new(face: &ftwrap::Face) -> Fallible<Self> {
-        let mut font = harfbuzz::Font::new(face.face);
-        let (load_flags, _) = ftwrap::compute_load_flags();
-        font.set_load_flags(load_flags);
+        let font = harfbuzz::Font::new(face.face);
         Ok(Self { font: RefCell::new(font) })
     }
 }

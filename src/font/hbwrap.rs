@@ -7,14 +7,6 @@ use failure::{ensure, Error};
 use std::mem;
 use std::slice;
 
-extern "C" {
-    fn hb_ft_font_set_load_flags(font: *mut hb_font_t, load_flags: i32);
-}
-
-extern "C" {
-    pub fn hb_ft_font_create_referenced(face: freetype::freetype::FT_Face) -> *mut hb_font_t;
-}
-
 pub fn feature_from_string(s: &str) -> Result<hb_feature_t, Error> {
     unsafe {
         let mut feature = mem::zeroed();
@@ -43,12 +35,6 @@ impl Drop for Font {
 impl Font {
     pub fn new(face: freetype::freetype::FT_Face) -> Font {
         Font { font: unsafe { hb_ft_font_create_referenced(face as _) } }
-    }
-
-    pub fn set_load_flags(&mut self, load_flags: freetype::freetype::FT_Int32) {
-        unsafe {
-            hb_ft_font_set_load_flags(self.font, load_flags);
-        }
     }
 
     pub fn shape(&mut self, buf: &mut Buffer, features: &[hb_feature_t]) {
