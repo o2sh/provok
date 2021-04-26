@@ -7,6 +7,10 @@ use failure::{ensure, Error};
 use std::mem;
 use std::slice;
 
+extern "C" {
+    pub fn hb_ft_font_create_referenced(face: freetype::freetype::FT_Face) -> *mut hb_font_t;
+}
+
 pub fn feature_from_string(s: &str) -> Result<hb_feature_t, Error> {
     unsafe {
         let mut feature = mem::zeroed();
