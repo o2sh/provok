@@ -5,7 +5,6 @@ in vec2 o_tex;
 in vec4 o_fg_color;
 in vec4 o_bg_color;
 
-uniform mat4 projection;
 uniform sampler2D glyph_tex;
 uniform bool draw_bg;
 
