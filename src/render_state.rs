@@ -10,7 +10,7 @@ use glium::{IndexBuffer, VertexBuffer};
 
 const PADDING: f32 = 15.;
 
-const INNER_BG_ALPHA: f32 = 0.9;
+const INNER_BG_ALPHA: f32 = 0.8;
 
 const ATLAS_SIZE: usize = 8192;
 

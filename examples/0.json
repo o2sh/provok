@@ -3,8 +3,9 @@
     "words": [
         {
             "text": "\"PROVOK\"",
-            "canvas_color": "#D64574",
-            "fg_color": "#77D0EE",
+            "canvas_color": "#E24E43",
+            "bg_color": "#EFB715",
+            "fg_color": "#E24E43",
             "bold": true
         },
         {
