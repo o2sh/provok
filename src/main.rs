@@ -32,6 +32,7 @@ mod language;
 mod render_state;
 mod utils;
 
+const FPS: u32 = 60;
 static DEFAULT_INPUT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/0.json");
 
 fn run(input_path: &str) -> Fallible<()> {
@@ -46,7 +47,7 @@ fn run(input_path: &str) -> Fallible<()> {
     let render_state = RefCell::new(RenderState::new(&display)?);
     let mut frame_count = 0;
     let mut count = 0;
-    let mut t = 0.;
+    let mut time = 0.;
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::WindowEvent { event, .. } => match event {
@@ -63,8 +64,7 @@ fn run(input_path: &str) -> Fallible<()> {
             },
             _ => return,
         }
-
-        let next_frame_time = Instant::now() + Duration::from_nanos(16_666_667);
+        let next_frame_time = Instant::now() + Duration::from_micros(1_000_000 / FPS as u64);
         *control_flow = ControlFlow::WaitUntil(next_frame_time);
         let mut target = display.draw();
 
@@ -78,7 +78,7 @@ fn run(input_path: &str) -> Fallible<()> {
             window_width,
             window_height,
             &mut count,
-            &mut t,
+            &mut time,
             frame_count,
         )
         .unwrap();
@@ -98,7 +98,7 @@ fn paint_screen(
     window_width: f64,
     window_height: f64,
     count: &mut u32,
-    t: &mut f32,
+    time: &mut f32,
     frame_count: u32,
 ) -> Fallible<()> {
     let mut gl_state = render_state.borrow_mut();
@@ -125,12 +125,7 @@ fn paint_screen(
         *count += 1;
     }
 
-    *t += 0.02;
-    if *t > 1. {
-        *t = 0.;
-    }
-
-    let rad = 2.0 * std::f32::consts::PI * *t;
+    *time += 1. / FPS as f32;
 
     frame.draw(
         gl_state.bg_vertex_buffer.as_ref().unwrap(),
@@ -138,12 +133,12 @@ fn paint_screen(
         &gl_state.bg_program,
         &uniform! {
             projection: projection,
-            rad: rad
+            time: *time
         },
         &draw_params,
     )?;
 
-    let pad = (1. * PADDING * scale_factor) as u32;
+    let pad = (1.5 * PADDING * scale_factor) as u32;
     let (w, h) = (window_width * scale_factor, window_height * scale_factor);
     let rect =
         Rect { left: pad, bottom: pad, width: w as u32 - 2 * pad, height: h as u32 - 2 * pad };
