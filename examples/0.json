@@ -3,15 +3,21 @@
     "words": [
         {
             "text": "\"PROVOK\"",
-            "canvas_color": "#D8E3F0",
-            "fg_color": "#D8E3F0",
-            "bg_color": "#15203E",
+            "canvas_color": "#D64574",
+            "fg_color": "#77D0EE",
             "bold": true
         },
         {
             "text": "الإستفزاز",
-            "canvas_color": "#2F342F",
-            "fg_color": "#F5F4D7",
+            "canvas_color": "#72A7C8",
+            "fg_color": "#2D2425",
+            "bold": true
+        },
+        {
+            "text": "去挑衅",
+            "canvas_color": "#D53071",
+            "fg_color": "#008165",
+            "bg_color": "#E03427",
             "bold": true
         },
         {
@@ -31,13 +37,6 @@
             "text": "เพื่อกระตุ้น",
             "canvas_color": "#66C89B",
             "fg_color": "#D4FDA2",
-            "bold": true
-        },
-        {
-            "text": "去挑衅",
-            "canvas_color": "#D53071",
-            "fg_color": "#008165",
-            "bg_color": "#E03427",
             "bold": true
         }
     ]
