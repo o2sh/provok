@@ -15,10 +15,9 @@ use glium::glutin::event_loop::ControlFlow;
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::Rect;
 use glium::{Display, Frame, Surface};
 use input::{Input, Word};
-use render_state::{RenderState, PADDING};
+use render_state::RenderState;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -41,7 +40,6 @@ fn run(input_path: &str) -> Fallible<()> {
     let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(window_width, window_height));
     let cb = ContextBuilder::new();
     let display = Display::new(wb, cb, &event_loop)?;
-    let scale_factor = display.gl_window().window().scale_factor();
     let input = Rc::new(Input::new(input_path)?);
     let fontconfig = Rc::new(FontConfiguration::new(input.config.font_size, input.config.dpi)?);
     let render_state = RefCell::new(RenderState::new(&display)?);
@@ -73,7 +71,6 @@ fn run(input_path: &str) -> Fallible<()> {
             &render_state,
             &display,
             &mut target,
-            scale_factor,
             &input.words,
             window_width,
             window_height,
@@ -93,7 +90,6 @@ fn paint_screen(
     render_state: &RefCell<RenderState>,
     display: &Display,
     frame: &mut Frame,
-    scale_factor: f64,
     words: &Vec<Word>,
     window_width: f64,
     window_height: f64,
@@ -138,26 +134,20 @@ fn paint_screen(
         &draw_params,
     )?;
 
-    let pad = (1.5 * PADDING * scale_factor) as u32;
-    let (w, h) = (window_width * scale_factor, window_height * scale_factor);
-    let rect =
-        Rect { left: pad, bottom: pad, width: w as u32 - 2 * pad, height: h as u32 - 2 * pad };
+    gl_state.compute_inner_bg_vertices(display, window_width, window_height)?;
 
-    let word = gl_state.word.as_ref().unwrap();
-    frame.clear(
-        Some(&rect),
-        Some((
-            word.canvas_color.red as f32 / 255.,
-            word.canvas_color.green as f32 / 255.,
-            word.canvas_color.blue as f32 / 255.,
-            1.0,
-        )),
-        false,
-        None,
-        None,
-    );
+    frame.draw(
+        gl_state.inner_bg_vertex_buffer.as_ref().unwrap(),
+        gl_state.inner_bg_index_buffer.as_ref().unwrap(),
+        &gl_state.glyph_program,
+        &uniform! {
+            projection: projection,
+            draw_bg: true
+        },
+        &draw_params,
+    )?;
 
-    if word.style.bg_color.is_some() {
+    if gl_state.word.as_ref().unwrap().style.bg_color.is_some() {
         frame.draw(
             gl_state.glyph_bg_vertex_buffer.as_ref().unwrap(),
             gl_state.glyph_bg_index_buffer.as_ref().unwrap(),

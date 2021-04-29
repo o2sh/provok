@@ -8,7 +8,9 @@ use glium::Display;
 use glium::Program;
 use glium::{IndexBuffer, VertexBuffer};
 
-pub const PADDING: f64 = 15.;
+const PADDING: f32 = 15.;
+
+const INNER_BG_ALPHA: f32 = 0.9;
 
 const ATLAS_SIZE: usize = 8192;
 
@@ -47,6 +49,8 @@ pub struct RenderState {
     pub glyph_index_buffer: Option<IndexBuffer<u32>>,
     pub glyph_bg_vertex_buffer: Option<VertexBuffer<Vertex>>,
     pub glyph_bg_index_buffer: Option<IndexBuffer<u32>>,
+    pub inner_bg_vertex_buffer: Option<VertexBuffer<Vertex>>,
+    pub inner_bg_index_buffer: Option<IndexBuffer<u32>>,
     pub bg_vertex_buffer: Option<VertexBuffer<Vertex>>,
     pub bg_index_buffer: Option<IndexBuffer<u32>>,
     pub word: Option<Word>,
@@ -64,6 +68,8 @@ impl RenderState {
             glyph_index_buffer: None,
             glyph_bg_vertex_buffer: None,
             glyph_bg_index_buffer: None,
+            inner_bg_vertex_buffer: None,
+            inner_bg_index_buffer: None,
             bg_vertex_buffer: None,
             bg_index_buffer: None,
             word: None,
@@ -189,6 +195,45 @@ impl RenderState {
 
         self.glyph_bg_vertex_buffer = Some(VertexBuffer::dynamic(display, &verts)?);
         self.glyph_bg_index_buffer =
+            Some(IndexBuffer::new(display, glium::index::PrimitiveType::TrianglesList, &indices)?);
+        Ok(())
+    }
+
+    pub fn compute_inner_bg_vertices(
+        &mut self,
+        display: &Display,
+        window_width: f64,
+        window_height: f64,
+    ) -> Fallible<()> {
+        let canvas_color = self.word.as_ref().unwrap().canvas_color;
+        let mut bg_color = color::to_tuple_rgba(canvas_color);
+        bg_color.3 = INNER_BG_ALPHA;
+        let mut verts = Vec::new();
+        let mut indices = Vec::new();
+
+        let pad = 1.8 * PADDING;
+        let (w, h) = (window_width as f32 / 2., window_height as f32 / 2.);
+
+        let left = -w + pad;
+        let right = w - pad;
+        let top = -h + pad;
+        let bottom = h - pad;
+
+        verts.push(Vertex { position: (left, top), bg_color, ..Default::default() });
+        verts.push(Vertex { position: (right, top), bg_color, ..Default::default() });
+        verts.push(Vertex { position: (left, bottom), bg_color, ..Default::default() });
+        verts.push(Vertex { position: (right, bottom), bg_color, ..Default::default() });
+
+        indices.push(V_TOP_LEFT as u32);
+        indices.push(V_TOP_RIGHT as u32);
+        indices.push(V_BOT_LEFT as u32);
+
+        indices.push(V_TOP_RIGHT as u32);
+        indices.push(V_BOT_LEFT as u32);
+        indices.push(V_BOT_RIGHT as u32);
+
+        self.inner_bg_vertex_buffer = Some(VertexBuffer::dynamic(display, &verts)?);
+        self.inner_bg_index_buffer =
             Some(IndexBuffer::new(display, glium::index::PrimitiveType::TrianglesList, &indices)?);
         Ok(())
     }
