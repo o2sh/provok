@@ -8,7 +8,7 @@ use glium::Display;
 use glium::Program;
 use glium::{IndexBuffer, VertexBuffer};
 
-pub const PADDING: f32 = 15.;
+pub const PADDING: f64 = 15.;
 
 const ATLAS_SIZE: usize = 8192;
 
@@ -169,10 +169,10 @@ impl RenderState {
             bottom = bottom.max(v.position.1);
         }
 
-        left -= PADDING;
-        right += PADDING;
-        top -= PADDING;
-        bottom += PADDING;
+        left -= PADDING as f32;
+        right += PADDING as f32;
+        top -= PADDING as f32;
+        bottom += PADDING as f32;
 
         verts.push(Vertex { position: (left, top), bg_color, ..Default::default() });
         verts.push(Vertex { position: (right, top), bg_color, ..Default::default() });

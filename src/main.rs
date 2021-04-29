@@ -40,12 +40,13 @@ fn run(input_path: &str) -> Fallible<()> {
     let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(window_width, window_height));
     let cb = ContextBuilder::new();
     let display = Display::new(wb, cb, &event_loop)?;
+    let scale_factor = display.gl_window().window().scale_factor();
     let input = Rc::new(Input::new(input_path)?);
     let fontconfig = Rc::new(FontConfiguration::new(input.config.font_size, input.config.dpi)?);
     let render_state = RefCell::new(RenderState::new(&display)?);
     let mut frame_count = 0;
     let mut count = 0;
-    let mut time = 0.;
+    let mut t = 0.;
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::WindowEvent { event, .. } => match event {
@@ -72,11 +73,12 @@ fn run(input_path: &str) -> Fallible<()> {
             &render_state,
             &display,
             &mut target,
+            scale_factor,
             &input.words,
             window_width,
             window_height,
             &mut count,
-            &mut time,
+            &mut t,
             frame_count,
         )
         .unwrap();
@@ -91,11 +93,12 @@ fn paint_screen(
     render_state: &RefCell<RenderState>,
     display: &Display,
     frame: &mut Frame,
+    scale_factor: f64,
     words: &Vec<Word>,
     window_width: f64,
     window_height: f64,
     count: &mut u32,
-    time: &mut f32,
+    t: &mut f32,
     frame_count: u32,
 ) -> Fallible<()> {
     let mut gl_state = render_state.borrow_mut();
@@ -122,12 +125,12 @@ fn paint_screen(
         *count += 1;
     }
 
-    *time += 0.02;
-    if *time > 1. {
-        *time = 0.;
+    *t += 0.02;
+    if *t > 1. {
+        *t = 0.;
     }
 
-    let rad = 2.0 * std::f32::consts::PI * *time;
+    let rad = 2.0 * std::f32::consts::PI * *t;
 
     frame.draw(
         gl_state.bg_vertex_buffer.as_ref().unwrap(),
@@ -140,13 +143,10 @@ fn paint_screen(
         &draw_params,
     )?;
 
-    let pad = (1.5 * PADDING) as u32;
-    let rect = Rect {
-        left: pad,
-        bottom: pad,
-        width: window_width as u32 - 2 * pad,
-        height: window_height as u32 - 2 * pad,
-    };
+    let pad = (1. * PADDING * scale_factor) as u32;
+    let (w, h) = (window_width * scale_factor, window_height * scale_factor);
+    let rect =
+        Rect { left: pad, bottom: pad, width: w as u32 - 2 * pad, height: h as u32 - 2 * pad };
 
     let word = gl_state.word.as_ref().unwrap();
     frame.clear(
