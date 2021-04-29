@@ -15,9 +15,10 @@ use glium::glutin::event_loop::ControlFlow;
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
+use glium::Rect;
 use glium::{Display, Frame, Surface};
 use input::{Input, Word};
-use render_state::RenderState;
+use render_state::{RenderState, PADDING};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -43,7 +44,7 @@ fn run(input_path: &str) -> Fallible<()> {
     let fontconfig = Rc::new(FontConfiguration::new(input.config.font_size, input.config.dpi)?);
     let render_state = RefCell::new(RenderState::new(&display)?);
     let mut frame_count = 0;
-    let mut draw_word_count = 0;
+    let mut count = 0;
     let mut time = 0.;
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -74,7 +75,7 @@ fn run(input_path: &str) -> Fallible<()> {
             &input.words,
             window_width,
             window_height,
-            &mut draw_word_count,
+            &mut count,
             &mut time,
             frame_count,
         )
@@ -93,7 +94,7 @@ fn paint_screen(
     words: &Vec<Word>,
     window_width: f64,
     window_height: f64,
-    draw_word_count: &mut u32,
+    count: &mut u32,
     time: &mut f32,
     frame_count: u32,
 ) -> Fallible<()> {
@@ -111,21 +112,14 @@ fn paint_screen(
     let draw_params =
         glium::DrawParameters { blend: glium::Blend::alpha_blending(), ..Default::default() };
 
-    let idx = *draw_word_count as usize % words.len();
-    let word = &words[idx];
-
-    frame.clear_color(
-        word.canvas_color.red as f32 / 255.,
-        word.canvas_color.green as f32 / 255.,
-        word.canvas_color.blue as f32 / 255.,
-        1.0,
-    );
-
     gl_state.compute_bg_vertices(display, window_width, window_height)?;
 
     if frame_count % 30 == 0 {
-        gl_state.compute_glyph_vertices(word, display, fontconfig)?;
-        *draw_word_count += 1;
+        let idx = *count as usize % words.len();
+        let w = &words[idx];
+        gl_state.word = Some(w.clone());
+        gl_state.compute_glyph_vertices(display, fontconfig)?;
+        *count += 1;
     }
 
     *time += 0.02;
@@ -146,7 +140,29 @@ fn paint_screen(
         &draw_params,
     )?;
 
-    if gl_state.draw_bg {
+    let pad = (1.5 * PADDING) as u32;
+    let rect = Rect {
+        left: pad,
+        bottom: pad,
+        width: window_width as u32 - 2 * pad,
+        height: window_height as u32 - 2 * pad,
+    };
+
+    let word = gl_state.word.as_ref().unwrap();
+    frame.clear(
+        Some(&rect),
+        Some((
+            word.canvas_color.red as f32 / 255.,
+            word.canvas_color.green as f32 / 255.,
+            word.canvas_color.blue as f32 / 255.,
+            1.0,
+        )),
+        false,
+        None,
+        None,
+    );
+
+    if word.style.bg_color.is_some() {
         frame.draw(
             gl_state.glyph_bg_vertex_buffer.as_ref().unwrap(),
             gl_state.glyph_bg_index_buffer.as_ref().unwrap(),

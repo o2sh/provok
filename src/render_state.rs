@@ -8,7 +8,7 @@ use glium::Display;
 use glium::Program;
 use glium::{IndexBuffer, VertexBuffer};
 
-const PADDING: f32 = 15.;
+pub const PADDING: f32 = 15.;
 
 const ATLAS_SIZE: usize = 8192;
 
@@ -49,7 +49,7 @@ pub struct RenderState {
     pub glyph_bg_index_buffer: Option<IndexBuffer<u32>>,
     pub bg_vertex_buffer: Option<VertexBuffer<Vertex>>,
     pub bg_index_buffer: Option<IndexBuffer<u32>>,
-    pub draw_bg: bool,
+    pub word: Option<Word>,
 }
 
 impl RenderState {
@@ -66,35 +66,31 @@ impl RenderState {
             glyph_bg_index_buffer: None,
             bg_vertex_buffer: None,
             bg_index_buffer: None,
-            draw_bg: false,
+            word: None,
         })
     }
 
     pub fn compute_glyph_vertices(
         &mut self,
-        word: &Word,
         display: &Display,
         fontconfig: &FontConfiguration,
     ) -> Fallible<()> {
-        self.compute_g_vertices(word, display, fontconfig)?;
+        self.compute_g_vertices(display, fontconfig)?;
 
-        if let Some(bg_color) = word.style.bg_color {
-            self.draw_bg = true;
+        if let Some(bg_color) = self.word.as_ref().unwrap().style.bg_color {
             self.compute_bg_g_vertices(bg_color, display)?;
-        } else {
-            self.draw_bg = false;
         }
         Ok(())
     }
 
     pub fn compute_g_vertices(
         &mut self,
-        word: &Word,
         display: &Display,
         fontconfig: &FontConfiguration,
     ) -> Fallible<()> {
         let mut verts = Vec::new();
         let mut indices = Vec::new();
+        let word = self.word.as_ref().unwrap();
         let fg_color = color::to_tuple_rgba(word.style.fg_color);
 
         let font = fontconfig.get_font(&word.style)?;
@@ -205,7 +201,7 @@ impl RenderState {
     ) -> Fallible<()> {
         let mut verts = Vec::new();
         let mut indices = Vec::new();
-        let (w, h) = (window_width as f32 / 2. - PADDING, window_height as f32 / 2. - PADDING);
+        let (w, h) = (window_width as f32 / 2., window_height as f32 / 2.);
 
         verts.push(Vertex { position: (-w, -h), ..Default::default() });
         verts.push(Vertex { position: (w, -h), ..Default::default() });

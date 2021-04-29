@@ -33,6 +33,7 @@ pub struct Config {
     pub dpi: u32,
 }
 
+#[derive(Clone)]
 pub struct Word {
     pub text: String,
     pub canvas_color: RgbColor,
