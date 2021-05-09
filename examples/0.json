@@ -3,36 +3,42 @@
     "words": [
         {
             "text": "\"PROVOK\"",
+            "canvas_color": "#000000",
             "bg_color": "#000000",
             "fg_color": "#FF0000",
             "bold": true
         },
         {
             "text": "الإستفزاز",
+            "canvas_color": "#000000",
             "bg_color": "#000000",
             "fg_color": "#FF0000",
             "bold": true
         },
         {
             "text": "去挑衅",
+            "canvas_color": "#000000",
             "bg_color": "#000000",
             "fg_color": "#FF0000",
             "bold": true
         },
         {
             "text": "उकसाने के लिए",
+            "canvas_color": "#000000",
             "bg_color": "#000000",
             "fg_color": "#FF0000",
             "bold": true
         },
         {
             "text": "побуждение",
+            "canvas_color": "#000000",
             "bg_color": "#000000",
             "fg_color": "#FF0000",
             "bold": true
         },
         {
             "text": "เพื่อกระตุ้น",
+            "canvas_color": "#000000",
             "bg_color": "#000000",
             "fg_color": "#FF0000",
             "bold": true

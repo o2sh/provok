@@ -210,7 +210,9 @@ impl RenderState {
         window_width: f64,
         window_height: f64,
     ) -> Fallible<()> {
-        let bg_color = (0., 0., 0., INNER_BG_ALPHA);
+        let canvas_color = self.word.as_ref().unwrap().canvas_color;
+        let mut bg_color = color::to_tuple_rgba(canvas_color);
+        bg_color.3 = INNER_BG_ALPHA;
         let mut verts = Vec::new();
         let mut indices = Vec::new();
 
