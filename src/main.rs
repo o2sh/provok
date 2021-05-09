@@ -34,7 +34,7 @@ mod utils;
 const FPS: u32 = 60;
 static DEFAULT_INPUT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/0.json");
 
-fn run(input_path: &str) -> Fallible<()> {
+fn run(input_path: &str, bg_fragment_shader_num: usize) -> Fallible<()> {
     let event_loop = EventLoop::new();
     let (window_width, window_height) = (720., 405.);
     let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(window_width, window_height));
@@ -42,7 +42,7 @@ fn run(input_path: &str) -> Fallible<()> {
     let display = Display::new(wb, cb, &event_loop)?;
     let input = Rc::new(Input::new(input_path)?);
     let fontconfig = Rc::new(FontConfiguration::new(input.config.font_size, input.config.dpi)?);
-    let render_state = RefCell::new(RenderState::new(&display)?);
+    let render_state = RefCell::new(RenderState::new(&display, bg_fragment_shader_num)?);
     let mut frame_count = 0;
     let mut count = 0;
     let mut time = 0.;
@@ -191,9 +191,24 @@ fn main() -> Fallible<()> {
                 .help("Which input to use.")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("fragment")
+                .short("f")
+                .long("fragment")
+                .help("Which fragment shader to use.")
+                .takes_value(true)
+                .validator(|t| {
+                    t.parse::<usize>()
+                        .map_err(|_t| "must be a number")
+                        .map(|_t| ())
+                        .map_err(|e| e.to_string())
+                }),
+        )
         .get_matches();
 
     let input_path = matches.value_of("input").unwrap_or(DEFAULT_INPUT_FILE);
-    run(input_path)?;
+    let bg_fragment_shader_num: usize =
+        matches.value_of("fragment").unwrap_or("0").parse().unwrap();
+    run(input_path, bg_fragment_shader_num)?;
     Ok(())
 }

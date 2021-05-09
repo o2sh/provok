@@ -13,7 +13,6 @@ struct InputJson {
 #[derive(Debug, Deserialize, Clone)]
 struct WordJson {
     text: String,
-    canvas_color: String,
     fg_color: String,
     bg_color: Option<String>,
     bold: Option<bool>,
@@ -36,7 +35,6 @@ pub struct Config {
 #[derive(Clone)]
 pub struct Word {
     pub text: String,
-    pub canvas_color: RgbColor,
     pub style: TextStyle,
 }
 
@@ -70,7 +68,6 @@ impl Input {
             let hb_script = buf.get_script();
             words.push(Word {
                 text: String::from(&word_json.text),
-                canvas_color: RgbColor::from_named_or_rgb_string(&word_json.canvas_color).unwrap(),
                 style: TextStyle {
                     fg_color: RgbColor::from_named_or_rgb_string(&word_json.fg_color).unwrap(),
                     bg_color,

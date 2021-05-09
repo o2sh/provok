@@ -10,7 +10,7 @@ use glium::{IndexBuffer, VertexBuffer};
 
 const PADDING: f32 = 15.;
 
-const INNER_BG_ALPHA: f32 = 0.9;
+const INNER_BG_ALPHA: f32 = 0.7;
 
 const ATLAS_SIZE: usize = 8192;
 
@@ -23,8 +23,13 @@ static GLYPH_FRAGMENT_SHADER: &str =
 static BG_VERTEX_SHADER: &str =
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_vertex.glsl"));
 
-static BG_FRAGMENT_SHADER: &str =
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_fragment.glsl"));
+static BG_FRAGMENT_SHADERS: [&str; 5] = [
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag0.glsl")),
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag1.glsl")),
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag2.glsl")),
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag3.glsl")),
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag4.glsl")),
+];
 
 pub const V_TOP_LEFT: usize = 0;
 pub const V_TOP_RIGHT: usize = 1;
@@ -57,8 +62,8 @@ pub struct RenderState {
 }
 
 impl RenderState {
-    pub fn new(display: &Display) -> Fallible<Self> {
-        let (glyph_program, bg_program) = compile_shaders(display)?;
+    pub fn new(display: &Display, bg_fragment_shader_num: usize) -> Fallible<Self> {
+        let (glyph_program, bg_program) = compile_shaders(display, bg_fragment_shader_num)?;
         let glyph_atlas = GlyphAtlas::new(display, ATLAS_SIZE)?;
         Ok(Self {
             glyph_atlas,
@@ -205,13 +210,11 @@ impl RenderState {
         window_width: f64,
         window_height: f64,
     ) -> Fallible<()> {
-        let canvas_color = self.word.as_ref().unwrap().canvas_color;
-        let mut bg_color = color::to_tuple_rgba(canvas_color);
-        bg_color.3 = INNER_BG_ALPHA;
+        let bg_color = (0., 0., 0., INNER_BG_ALPHA);
         let mut verts = Vec::new();
         let mut indices = Vec::new();
 
-        let pad = 1.8 * PADDING;
+        let pad = 3. * PADDING;
         let (w, h) = (window_width as f32 / 2., window_height as f32 / 2.);
 
         let left = -w + pad;
@@ -269,7 +272,10 @@ impl RenderState {
     }
 }
 
-fn compile_shaders(display: &Display) -> Fallible<(glium::Program, glium::Program)> {
+fn compile_shaders(
+    display: &Display,
+    bg_fragment_shader_num: usize,
+) -> Fallible<(glium::Program, glium::Program)> {
     let glyph_source = glium::program::ProgramCreationInput::SourceCode {
         vertex_shader: GLYPH_VERTEX_SHADER,
         fragment_shader: GLYPH_FRAGMENT_SHADER,
@@ -284,7 +290,7 @@ fn compile_shaders(display: &Display) -> Fallible<(glium::Program, glium::Progra
 
     let bg_source = glium::program::ProgramCreationInput::SourceCode {
         vertex_shader: BG_VERTEX_SHADER,
-        fragment_shader: BG_FRAGMENT_SHADER,
+        fragment_shader: BG_FRAGMENT_SHADERS[bg_fragment_shader_num],
         outputs_srgb: true,
         tessellation_control_shader: None,
         tessellation_evaluation_shader: None,
