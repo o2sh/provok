@@ -14,7 +14,6 @@ Provok is fed with a [JSON file](./examples/0.json) that consists of an array of
     "words": [
         {
             "text": "\"PROVOK\"",
-            "canvas_color": "#D8E3F0",
             "fg_color": "#D8E3F0",
             "bg_color": "#15203E",
             "bold": true
@@ -39,4 +38,10 @@ You can also provide your own custom input file with the `--input` CLI flag:
 
 ```text
 provok -i /path/to/input-file
+```
+
+You can pick between multiple background effects using the `--fragment` CLI flag:
+
+```text
+provok -f NUM (0..4)
 ```
