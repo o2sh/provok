@@ -44,5 +44,5 @@ provok -i /path/to/input-file
 You can pick between multiple background effects using the `--fragment` CLI flag:
 
 ```text
-provok -f NUM (0..4)
+provok -f NUM (0..5)
 ```

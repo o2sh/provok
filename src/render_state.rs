@@ -10,7 +10,7 @@ use glium::{IndexBuffer, VertexBuffer};
 
 const PADDING: f32 = 15.;
 
-const INNER_BG_ALPHA: f32 = 0.7;
+const INNER_BG_ALPHA: f32 = 0.9;
 
 const ATLAS_SIZE: usize = 8192;
 
@@ -23,12 +23,13 @@ static GLYPH_FRAGMENT_SHADER: &str =
 static BG_VERTEX_SHADER: &str =
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_vertex.glsl"));
 
-static BG_FRAGMENT_SHADERS: [&str; 5] = [
+static BG_FRAGMENT_SHADERS: [&str; 6] = [
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag0.glsl")),
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag1.glsl")),
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag2.glsl")),
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag3.glsl")),
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag4.glsl")),
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag5.glsl")),
 ];
 
 pub const V_TOP_LEFT: usize = 0;
