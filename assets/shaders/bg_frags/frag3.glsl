@@ -4,6 +4,7 @@ precision highp float;
 uniform float time;
 
 in vec4 o_position;
+out vec4 color;
 
 float field(in vec3 p) {
 	float strength = 7. + .03 * log(1.e-6 + fract(sin(time) * 4373.11));
@@ -52,6 +53,6 @@ void main() {
 	c1.b *= mod(gl_FragCoord.y+1.0, 2.0)*1.4;
 	c2.r *= mod(gl_FragCoord.y, 2.0)*3.4;
 	c3.g *= mod(gl_FragCoord.y, 2.0)*2.4;
-	gl_FragColor = c1*0.7 + c2*0.5 + c3*0.3;
+	color = c1*0.7 + c2*0.5 + c3*0.3;
 	
 }

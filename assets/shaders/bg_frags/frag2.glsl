@@ -4,6 +4,7 @@ precision highp float;
 uniform float time;
 
 in vec4 o_position;
+out vec4 color;
 
 void main( void ) {
 	vec2 uv = vec2(o_position.x, o_position.y);
@@ -28,5 +29,5 @@ void main( void ) {
 	float b=sin(uv.y+time)*0.5+0.5;
 	float g=sin((sqrt(uv.x*uv.x+uv.y*uv.y)+time))*0.5+0.5;
 	vec3 c=vec3(r,g,b);
-	gl_FragColor = vec4(c,1.0);
+	color = vec4(c,1.0);
 }

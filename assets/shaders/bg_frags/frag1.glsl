@@ -4,6 +4,7 @@ precision mediump float;
 uniform float time;
 
 in vec4 o_position;
+out vec4 color;
 
 float random (in vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233)))* 43758.5453123);
@@ -71,6 +72,6 @@ vec3 palette(in float t) {
 void main() {
     vec2 p = vec2(o_position.x, o_position.y);
     float value = pow(pattern(p), 2.);
-    vec3 color = palette(value);
-    gl_FragColor = vec4(color, 1.0);
+    vec3 c = palette(value);
+    color = vec4(c, 1.0);
 }
