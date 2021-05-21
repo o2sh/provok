@@ -15,7 +15,7 @@ use glium::glutin::event_loop::ControlFlow;
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::window::WindowBuilder;
 use glium::glutin::ContextBuilder;
-use glium::{Display, Frame, Surface};
+use glium::{BlendingFunction, Display, Frame, LinearBlendingFactor, Surface};
 use input::{Input, Word};
 use render_state::RenderState;
 use std::cell::RefCell;
@@ -108,8 +108,21 @@ fn paint_screen(
     )
     .to_arrays();
 
-    let draw_params =
-        glium::DrawParameters { blend: glium::Blend::alpha_blending(), ..Default::default() };
+    let draw_params_with_alpha = glium::DrawParameters {
+        blend: glium::Blend {
+            color: BlendingFunction::Addition {
+                source: LinearBlendingFactor::SourceAlpha,
+                destination: LinearBlendingFactor::OneMinusSourceAlpha,
+            },
+            alpha: BlendingFunction::Addition {
+                source: LinearBlendingFactor::One,
+                destination: LinearBlendingFactor::OneMinusSourceAlpha,
+            },
+            constant_value: (0.0, 0.0, 0.0, 0.0),
+        },
+
+        ..Default::default()
+    };
 
     gl_state.compute_bg_vertices(display, window_width, window_height)?;
 
@@ -131,7 +144,7 @@ fn paint_screen(
             projection: projection,
             time: *time
         },
-        &draw_params,
+        &Default::default(),
     )?;
 
     gl_state.compute_inner_bg_vertices(display, window_width, window_height)?;
@@ -144,7 +157,7 @@ fn paint_screen(
             projection: projection,
             draw_bg: true
         },
-        &draw_params,
+        &draw_params_with_alpha,
     )?;
 
     if gl_state.word.as_ref().unwrap().style.bg_color.is_some() {
@@ -156,7 +169,7 @@ fn paint_screen(
                 projection: projection,
                 draw_bg: true
             },
-            &draw_params,
+            &Default::default(),
         )?;
     }
 
@@ -171,7 +184,7 @@ fn paint_screen(
             glyph_tex: &*tex,
             draw_bg: false
         },
-        &draw_params,
+        &draw_params_with_alpha,
     )?;
 
     Ok(())
