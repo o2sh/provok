@@ -4,6 +4,7 @@ precision mediump float;
 uniform float time;
 
 in vec4 o_position;
+out vec4 color;
 
 #define OCTAVES  32.0
 
@@ -75,5 +76,5 @@ void main() {
 
     vec3 rez = mix(colour1, colour2, complexFBM(uv) * 1.5 + uv.y * 0.8 - sin(time * 0.1) * 0.5 - 0.7);
 
-	gl_FragColor = vec4(rez, 1.0);
+	color = vec4(rez, 1.0);
 }

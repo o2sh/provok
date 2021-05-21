@@ -4,13 +4,15 @@ precision mediump float;
 uniform float time;
 
 in vec4 o_position;
+out vec4 color;
+
+#define octaves 11
 
 float random (in vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898,78.233)))* 43758.5453123);
 }
 
 float noise (in vec2 st) {
-
     vec2 i = floor(st);
     vec2 f = fract(st);
 
@@ -26,10 +28,7 @@ float noise (in vec2 st) {
             (d - b) * u.x * u.y;
 }
 
-
-#define octaves 11
 float fbm (in vec2 p) {
-
     float value = 0.0;
     float freq = 1.0;
     float amp = 0.5;    
@@ -45,7 +44,7 @@ float fbm (in vec2 p) {
 float pattern(in vec2 p) {
     vec2 offset = vec2(-0.5);
 
-    vec2 aPos = vec2(sin(time * 0.005), sin(time * 0.01)) * 6.;
+    vec2 aPos = vec2(sin(time * 0.05), sin(time * 0.1)) * 6.;
     vec2 aScale = vec2(3.0); 
     float a = fbm(p * aScale + aPos);
 
@@ -71,6 +70,6 @@ vec3 palette(in float t) {
 void main() {
     vec2 p = vec2(o_position.x, o_position.y);
     float value = pow(pattern(p), 2.);
-    vec3 color = palette(value);
-    gl_FragColor = vec4(color, 1.0);
+    vec3 c = palette(value);
+    color = vec4(c, 1.0);
 }
