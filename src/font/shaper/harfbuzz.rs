@@ -2,7 +2,7 @@ use crate::font::ftwrap;
 use crate::font::hbwrap as harfbuzz;
 use crate::font::shaper::{FontShaper, GlyphInfo};
 use crate::utils::PixelLength;
-use failure::Fallible;
+use anyhow::Result;
 use std::cell::RefCell;
 
 #[derive(Clone)]
@@ -26,7 +26,7 @@ pub struct HarfbuzzShaper {
 }
 
 impl FontShaper for HarfbuzzShaper {
-    fn shape(&self, text: &str) -> Fallible<Vec<GlyphInfo>> {
+    fn shape(&self, text: &str) -> Result<Vec<GlyphInfo>> {
         let features = vec![
             harfbuzz::feature_from_string("kern")?,
             harfbuzz::feature_from_string("liga")?,
@@ -55,7 +55,7 @@ impl FontShaper for HarfbuzzShaper {
 }
 
 impl HarfbuzzShaper {
-    pub fn new(face: &ftwrap::Face) -> Fallible<Self> {
+    pub fn new(face: &ftwrap::Face) -> Result<Self> {
         let font = harfbuzz::Font::new(face.face);
         Ok(Self { font: RefCell::new(font) })
     }

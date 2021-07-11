@@ -1,5 +1,5 @@
 use crate::font::loader::FontDataHandle;
-use failure::{format_err, Fallible, ResultExt};
+use anyhow::{anyhow, Context, Result};
 pub use freetype::freetype::*;
 use libc::{self, c_long, c_void, size_t};
 use std::ptr;
@@ -10,11 +10,11 @@ pub fn succeeded(error: FT_Error) -> bool {
     error == freetype::freetype::FT_Err_Ok as FT_Error
 }
 
-fn ft_result<T>(err: FT_Error, t: T) -> Fallible<T> {
+fn ft_result<T>(err: FT_Error, t: T) -> Result<T> {
     if succeeded(err) {
         Ok(t)
     } else {
-        Err(format_err!("FreeType error {:?} 0x{:x}", err, err))
+        Err(anyhow!("FreeType error {:?} 0x{:x}", err, err))
     }
 }
 
@@ -64,7 +64,7 @@ impl Drop for Face {
 }
 
 impl Face {
-    pub fn set_font_size(&mut self, point_size: f64, dpi: u32) -> Fallible<()> {
+    pub fn set_font_size(&mut self, point_size: f64, dpi: u32) -> Result<()> {
         let size = (point_size * 64.0) as FT_F26Dot6;
         self.set_char_size(size, 0, dpi, 0)
     }
@@ -75,7 +75,7 @@ impl Face {
         char_height: FT_F26Dot6,
         horz_resolution: FT_UInt,
         vert_resolution: FT_UInt,
-    ) -> Fallible<()> {
+    ) -> Result<()> {
         ft_result(
             unsafe {
                 FT_Set_Char_Size(
@@ -95,7 +95,7 @@ impl Face {
         glyph_index: FT_UInt,
         load_flags: FT_Int32,
         render_mode: FT_Render_Mode,
-    ) -> Fallible<&FT_GlyphSlotRec_> {
+    ) -> Result<&FT_GlyphSlotRec_> {
         unsafe {
             let res = FT_Load_Glyph(self.face, glyph_index, load_flags);
             let slot = ft_result(res, &mut *(*self.face).glyph)?;
@@ -141,7 +141,7 @@ impl Drop for Library {
 }
 
 impl Library {
-    pub fn new() -> Fallible<Library> {
+    pub fn new() -> Result<Library> {
         let mut lib = ptr::null_mut();
 
         let err = unsafe { FT_New_Library(&mut MEMORY, &mut lib) };
@@ -155,7 +155,7 @@ impl Library {
         }
     }
 
-    pub fn new_face(&self, handle: &FontDataHandle) -> Fallible<Face> {
+    pub fn new_face(&self, handle: &FontDataHandle) -> Result<Face> {
         let res = unsafe { self.new_memory_face(self.lib, handle) };
         res
     }
@@ -163,7 +163,7 @@ impl Library {
         &self,
         library_raw: FT_Library,
         handle: &FontDataHandle,
-    ) -> Fallible<Face> {
+    ) -> Result<Face> {
         let data = Rc::new(handle.data.to_vec());
         let mut face = ptr::null_mut();
 
@@ -178,7 +178,7 @@ impl Library {
         Ok(Face {
             lib: library_raw,
             face: ft_result(res, face)
-                .with_context(|_| format!("FT_New_Memory_Face for index {}", handle.index))?,
+                .with_context(|| format!("FT_New_Memory_Face for index {}", handle.index))?,
             bytes: data,
         })
     }

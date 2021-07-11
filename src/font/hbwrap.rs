@@ -3,7 +3,7 @@ use freetype;
 pub use harfbuzz::*;
 use harfbuzz_sys as harfbuzz;
 
-use failure::{ensure, Error};
+use anyhow::{ensure, Result};
 use std::mem;
 use std::slice;
 
@@ -11,7 +11,7 @@ extern "C" {
     pub fn hb_ft_font_create_referenced(face: freetype::freetype::FT_Face) -> *mut hb_font_t;
 }
 
-pub fn feature_from_string(s: &str) -> Result<hb_feature_t, Error> {
+pub fn feature_from_string(s: &str) -> Result<hb_feature_t> {
     unsafe {
         let mut feature = mem::zeroed();
         ensure!(
@@ -59,7 +59,7 @@ impl Drop for Buffer {
 }
 
 impl Buffer {
-    pub fn new() -> Result<Buffer, Error> {
+    pub fn new() -> Result<Buffer> {
         let buf = unsafe { hb_buffer_create() };
         ensure!(unsafe { hb_buffer_allocation_successful(buf) } != 0, "hb_buffer_create failed");
         Ok(Buffer { buf })

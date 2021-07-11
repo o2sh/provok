@@ -1,6 +1,6 @@
 use crate::font::ftwrap;
 use crate::utils::PixelLength;
-use failure::Fallible;
+use anyhow::Result;
 
 pub mod harfbuzz;
 
@@ -14,9 +14,9 @@ pub struct GlyphInfo {
 }
 
 pub trait FontShaper {
-    fn shape(&self, text: &str) -> Fallible<Vec<GlyphInfo>>;
+    fn shape(&self, text: &str) -> Result<Vec<GlyphInfo>>;
 }
 
-pub fn new_shaper(face: &ftwrap::Face) -> Fallible<Box<dyn FontShaper>> {
+pub fn new_shaper(face: &ftwrap::Face) -> Result<Box<dyn FontShaper>> {
     Ok(Box::new(harfbuzz::HarfbuzzShaper::new(face)?))
 }

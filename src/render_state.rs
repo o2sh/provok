@@ -2,7 +2,7 @@ use crate::color;
 use crate::font::FontConfiguration;
 use crate::glyph_atlas::GlyphAtlas;
 use crate::input::Word;
-use failure::Fallible;
+use anyhow::Result;
 use glium::texture::SrgbTexture2d;
 use glium::Display;
 use glium::Program;
@@ -62,7 +62,7 @@ pub struct RenderState {
 }
 
 impl RenderState {
-    pub fn new(display: &Display, bg_fragment_shader_num: usize) -> Fallible<Self> {
+    pub fn new(display: &Display, bg_fragment_shader_num: usize) -> Result<Self> {
         let (glyph_program, bg_program) = compile_shaders(display, bg_fragment_shader_num)?;
         let glyph_atlas = GlyphAtlas::new(display, ATLAS_SIZE)?;
         Ok(Self {
@@ -85,7 +85,7 @@ impl RenderState {
         &mut self,
         display: &Display,
         fontconfig: &FontConfiguration,
-    ) -> Fallible<()> {
+    ) -> Result<()> {
         self.compute_g_vertices(display, fontconfig)?;
 
         if let Some(bg_color) = self.word.as_ref().unwrap().style.bg_color {
@@ -98,7 +98,7 @@ impl RenderState {
         &mut self,
         display: &Display,
         fontconfig: &FontConfiguration,
-    ) -> Fallible<()> {
+    ) -> Result<()> {
         let mut verts = Vec::new();
         let mut indices = Vec::new();
         let word = self.word.as_ref().unwrap();
@@ -166,7 +166,7 @@ impl RenderState {
         &mut self,
         bg_color: color::RgbColor,
         display: &Display,
-    ) -> Fallible<()> {
+    ) -> Result<()> {
         let bg_color = color::to_tuple_rgba(bg_color);
         let mut verts = Vec::new();
         let mut indices = Vec::new();
@@ -209,7 +209,7 @@ impl RenderState {
         display: &Display,
         window_width: f64,
         window_height: f64,
-    ) -> Fallible<()> {
+    ) -> Result<()> {
         let canvas_color = self.word.as_ref().unwrap().canvas_color;
         let mut bg_color = color::to_tuple_rgba(canvas_color);
         bg_color.3 = INNER_BG_ALPHA;
@@ -248,7 +248,7 @@ impl RenderState {
         display: &Display,
         window_width: f64,
         window_height: f64,
-    ) -> Fallible<()> {
+    ) -> Result<()> {
         let mut verts = Vec::new();
         let mut indices = Vec::new();
         let (w, h) = (window_width as f32 / 2., window_height as f32 / 2.);
@@ -277,7 +277,7 @@ impl RenderState {
 fn compile_shaders(
     display: &Display,
     bg_fragment_shader_num: usize,
-) -> Fallible<(glium::Program, glium::Program)> {
+) -> Result<(glium::Program, glium::Program)> {
     let glyph_source = glium::program::ProgramCreationInput::SourceCode {
         vertex_shader: GLYPH_VERTEX_SHADER,
         fragment_shader: GLYPH_FRAGMENT_SHADER,

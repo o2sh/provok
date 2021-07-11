@@ -1,5 +1,3 @@
-use failure::Fallible;
-
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -16,6 +14,7 @@ pub use crate::font::rasterizer::{FontMetrics, RasterizedGlyph};
 use crate::font::shaper::FontShaper;
 pub use crate::font::shaper::GlyphInfo;
 use crate::input::TextStyle;
+use anyhow::Result;
 
 pub struct LoadedFont {
     rasterizer: Box<dyn FontRasterizer>,
@@ -23,11 +22,11 @@ pub struct LoadedFont {
 }
 
 impl LoadedFont {
-    pub fn shape(&self, text: &str) -> Fallible<Vec<GlyphInfo>> {
+    pub fn shape(&self, text: &str) -> Result<Vec<GlyphInfo>> {
         self.shaper.shape(text)
     }
 
-    pub fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {
+    pub fn rasterize(&self, glyph_pos: u32) -> Result<RasterizedGlyph> {
         self.rasterizer.rasterize(glyph_pos)
     }
 }
@@ -40,12 +39,12 @@ pub struct FontConfiguration {
 }
 
 impl FontConfiguration {
-    pub fn new(font_size: f64, dpi: u32) -> Fallible<Self> {
+    pub fn new(font_size: f64, dpi: u32) -> Result<Self> {
         let lib = ftwrap::Library::new()?;
         Ok(Self { fonts: RefCell::new(HashMap::new()), font_size, dpi, lib })
     }
 
-    pub fn get_font(&self, style: &TextStyle) -> Fallible<Rc<LoadedFont>> {
+    pub fn get_font(&self, style: &TextStyle) -> Result<Rc<LoadedFont>> {
         let mut fonts = self.fonts.borrow_mut();
         if let Some(entry) = fonts.get(style) {
             return Ok(Rc::clone(entry));

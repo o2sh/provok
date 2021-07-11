@@ -1,11 +1,11 @@
 build:
-	cargo build --release 
+	cargo build --release
 
-install: build
-	sudo cp target/release/provok /usr/local/bin
+install:
+	cargo install --path "."
 
 uninstall:
-	sudo rm -f /usr/local/bin/provok
+	cargo uninstall onefetch
 
 clean:
 	cargo clean

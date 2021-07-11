@@ -1,6 +1,6 @@
 use crate::font::ftwrap;
 use crate::utils::PixelLength;
-use failure::Fallible;
+use anyhow::Result;
 
 pub mod freetype;
 
@@ -22,9 +22,9 @@ pub struct FontMetrics {
 }
 
 pub trait FontRasterizer {
-    fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph>;
+    fn rasterize(&self, glyph_pos: u32) -> Result<RasterizedGlyph>;
 }
 
-pub fn new_rasterizer(face: &ftwrap::Face) -> Fallible<Box<dyn FontRasterizer>> {
+pub fn new_rasterizer(face: &ftwrap::Face) -> Result<Box<dyn FontRasterizer>> {
     Ok(Box::new(freetype::FreeTypeRasterizer::new(face)?))
 }

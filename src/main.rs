@@ -1,11 +1,8 @@
 #[macro_use]
 extern crate glium;
 
-#[macro_use]
-extern crate failure;
-
+use anyhow::Result;
 use clap::{crate_description, crate_name, crate_version, App, AppSettings, Arg};
-use failure::Fallible;
 use font::FontConfiguration;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::Event;
@@ -34,7 +31,7 @@ mod utils;
 const FPS: u32 = 60;
 static DEFAULT_INPUT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/0.json");
 
-fn run(input_path: &str, bg_fragment_shader_num: usize) -> Fallible<()> {
+fn run(input_path: &str, bg_fragment_shader_num: usize) -> Result<()> {
     let event_loop = EventLoop::new();
     let (window_width, window_height) = (720., 405.);
     let wb = WindowBuilder::new().with_inner_size(LogicalSize::new(window_width, window_height));
@@ -96,7 +93,7 @@ fn paint_screen(
     count: &mut u32,
     time: &mut f32,
     frame_count: u32,
-) -> Fallible<()> {
+) -> Result<()> {
     let mut gl_state = render_state.borrow_mut();
     let projection = euclid::Transform3D::<f32, f32, f32>::ortho(
         -(window_width as f32) / 2.0,
@@ -190,7 +187,7 @@ fn paint_screen(
     Ok(())
 }
 
-fn main() -> Fallible<()> {
+fn main() -> Result<()> {
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())

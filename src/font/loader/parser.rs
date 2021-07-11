@@ -1,8 +1,8 @@
 use crate::font::loader::{FontDataHandle, Names};
 use crate::input::FontAttributes;
-use failure::Fallible;
+use anyhow::{bail, Result};
 
-pub fn load_built_in_font(font_attributes: &FontAttributes) -> Fallible<FontDataHandle> {
+pub fn load_built_in_font(font_attributes: &FontAttributes) -> Result<FontDataHandle> {
     let mut font_info = vec![];
     load_built_in_fonts(&mut font_info).ok();
     match_font_info(font_attributes, font_info)
@@ -11,7 +11,7 @@ pub fn load_built_in_font(font_attributes: &FontAttributes) -> Fallible<FontData
 fn match_font_info(
     attr: &FontAttributes,
     mut font_info: Vec<(Names, FontDataHandle)>,
-) -> Fallible<FontDataHandle> {
+) -> Result<FontDataHandle> {
     font_info.sort_by_key(|(names, _)| names.full_name.clone());
 
     for (names, handle) in &font_info {
@@ -19,7 +19,7 @@ fn match_font_info(
             return Ok(handle.clone());
         }
     }
-    failure::bail!("Could not find font");
+    bail!("Could not find font");
 }
 
 fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
@@ -43,7 +43,7 @@ fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
     }
 }
 
-fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Fallible<()> {
+fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Result<()> {
     macro_rules! font {
         ($font:literal) => {
             (include_bytes!($font) as &'static [u8], $font)

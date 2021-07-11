@@ -1,7 +1,7 @@
 use crate::color::RgbColor;
 use crate::font::hbwrap as harfbuzz;
 use crate::language;
-use failure::Fallible;
+use anyhow::Result;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
@@ -55,7 +55,7 @@ pub struct FontAttributes {
 }
 
 impl Input {
-    pub fn new(path: &str) -> Fallible<Self> {
+    pub fn new(path: &str) -> Result<Self> {
         let input_json = InputJson::parse(path)?;
         let mut words: Vec<Word> = Vec::new();
         for word_json in input_json.words.iter() {
@@ -88,7 +88,7 @@ impl Input {
 }
 
 impl InputJson {
-    fn parse(path: &str) -> Fallible<Self> {
+    fn parse(path: &str) -> Result<Self> {
         let data = std::fs::read_to_string(path)?;
         let input: InputJson = serde_json::from_str(&data)?;
         Ok(input)

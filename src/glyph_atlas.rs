@@ -2,7 +2,7 @@ use crate::bitmaps::atlas::{Atlas, Sprite};
 use crate::bitmaps::{Image, Texture2d};
 use crate::font::{GlyphInfo, RasterizedGlyph};
 use crate::utils::PixelLength;
-use failure::Fallible;
+use anyhow::Result;
 use glium::texture::SrgbTexture2d;
 use glium::Display;
 use std::rc::Rc;
@@ -20,7 +20,7 @@ pub struct GlyphAtlas<T: Texture2d> {
 }
 
 impl GlyphAtlas<SrgbTexture2d> {
-    pub fn new(backend: &Display, size: usize) -> Fallible<Self> {
+    pub fn new(backend: &Display, size: usize) -> Result<Self> {
         let surface = Rc::new(SrgbTexture2d::empty_with_format(
             backend,
             glium::texture::SrgbFormat::U8U8U8U8,
@@ -39,7 +39,7 @@ impl<T: Texture2d> GlyphAtlas<T> {
         &mut self,
         glyph: RasterizedGlyph,
         info: &GlyphInfo,
-    ) -> Fallible<GlyphTexture<T>> {
+    ) -> Result<GlyphTexture<T>> {
         let raw_im = Image::with_rgba32(
             glyph.width as usize,
             glyph.height as usize,

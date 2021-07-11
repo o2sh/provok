@@ -1,7 +1,7 @@
 use crate::font::rasterizer::FontRasterizer;
 use crate::font::{ftwrap, RasterizedGlyph};
 use crate::utils::PixelLength;
-use failure::Fallible;
+use anyhow::Result;
 use freetype::freetype::FT_GlyphSlotRec_;
 use std::cell::RefCell;
 use std::slice;
@@ -11,7 +11,7 @@ pub struct FreeTypeRasterizer {
 }
 
 impl FontRasterizer for FreeTypeRasterizer {
-    fn rasterize(&self, glyph_pos: u32) -> Fallible<RasterizedGlyph> {
+    fn rasterize(&self, glyph_pos: u32) -> Result<RasterizedGlyph> {
         let (load_flags, render_mode) = ftwrap::compute_load_flags();
 
         let mut face = self.face.borrow_mut();
@@ -56,7 +56,7 @@ impl FreeTypeRasterizer {
         }
     }
 
-    pub fn new(face: &ftwrap::Face) -> Fallible<Self> {
+    pub fn new(face: &ftwrap::Face) -> Result<Self> {
         let cloned_face = face.clone();
         Ok(Self { face: RefCell::new(cloned_face) })
     }
