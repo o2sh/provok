@@ -50,6 +50,8 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Result<(
         };
     }
     for (data, name) in &[
+        font!("../../../assets/fonts/jetbrains/JetBrainsMono-Regular.ttf"),
+        font!("../../../assets/fonts/jetbrains/JetBrainsMono-Bold.ttf"),
         font!("../../../assets/fonts/noto/NotoSansArabic-Bold.ttf"),
         font!("../../../assets/fonts/noto/NotoSansArabic-Regular.ttf"),
         font!("../../../assets/fonts/noto/NotoSansSC-Bold.otf"),
@@ -68,27 +70,32 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Result<(
         let face = ttf_parser::Face::from_slice(&data, 0)?;
         let full_name = face
             .names()
+            .filter(|name| name.to_string() != None)
             .find(|name| name.name_id() == ttf_parser::name_id::FULL_NAME)
             .and_then(|name| name.to_string())
             .unwrap();
 
         let postscript_name = face
             .names()
+            .filter(|name| name.to_string() != None)
             .find(|name| name.name_id() == ttf_parser::name_id::POST_SCRIPT_NAME)
             .and_then(|name| name.to_string());
 
         let unique = face
             .names()
+            .filter(|name| name.to_string() != None)
             .find(|name| name.name_id() == ttf_parser::name_id::UNIQUE_ID)
             .and_then(|name| name.to_string());
 
         let sub_family = face
             .names()
+            .filter(|name| name.to_string() != None)
             .find(|name| name.name_id() == ttf_parser::name_id::SUBFAMILY)
             .and_then(|name| name.to_string());
 
         let family = face
             .names()
+            .filter(|name| name.to_string() != None)
             .find(|name| name.name_id() == ttf_parser::name_id::FAMILY)
             .and_then(|name| name.to_string());
 
