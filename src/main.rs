@@ -2,7 +2,7 @@
 extern crate glium;
 
 use anyhow::Result;
-use clap::{crate_description, crate_name, crate_version, App, AppSettings, Arg};
+use clap::{crate_description, crate_name, crate_version, AppSettings, Arg};
 use font::FontConfiguration;
 use glium::glutin::dpi::LogicalSize;
 use glium::glutin::event::Event;
@@ -87,7 +87,7 @@ fn paint_screen(
     render_state: &RefCell<RenderState>,
     display: &Display,
     frame: &mut Frame,
-    words: &Vec<Word>,
+    words: &[Word],
     window_width: f64,
     window_height: f64,
     count: &mut u32,
@@ -188,22 +188,20 @@ fn paint_screen(
 }
 
 fn main() -> Result<()> {
-    let matches = App::new(crate_name!())
+    let matches = clap::Command::new(crate_name!())
         .version(crate_version!())
         .about(crate_description!())
-        .setting(AppSettings::ColoredHelp)
         .setting(AppSettings::DeriveDisplayOrder)
-        .setting(AppSettings::UnifiedHelpMessage)
         .arg(
-            Arg::with_name("input")
-                .short("i")
+            Arg::new("input")
+                .short('i')
                 .long("input")
                 .help("Which input to use.")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("fragment")
-                .short("f")
+            Arg::new("fragment")
+                .short('f')
                 .long("fragment")
                 .help("Which fragment shader to use.")
                 .takes_value(true)

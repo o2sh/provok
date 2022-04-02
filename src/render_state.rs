@@ -111,7 +111,7 @@ impl RenderState {
         let mut y = 0.;
         for glyph_info in &glyph_infos {
             let rasterized_glyph = font.rasterize(glyph_info.glyph_pos)?;
-            let glyph = self.glyph_atlas.load_glyph(rasterized_glyph, &glyph_info)?;
+            let glyph = self.glyph_atlas.load_glyph(rasterized_glyph, glyph_info)?;
 
             let x0 = x + (glyph.x_offset + glyph.bearing_x).get() as f32;
             let y0 = y - (glyph.y_offset + glyph.bearing_y).get() as f32;

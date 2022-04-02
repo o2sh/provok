@@ -15,7 +15,7 @@ fn match_font_info(
     font_info.sort_by_key(|(names, _)| names.full_name.clone());
 
     for (names, handle) in &font_info {
-        if font_info_matches(attr, &names) {
+        if font_info_matches(attr, names) {
             return Ok(handle.clone());
         }
     }
@@ -25,7 +25,7 @@ fn match_font_info(
 fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
     if let Some(fam) = names.family.as_ref() {
         if attr.family == *fam {
-            match names.sub_family.as_ref().map(String::as_str) {
+            match names.sub_family.as_deref() {
                 Some("Italic") if attr.italic && !attr.bold => return true,
                 Some("Bold") if attr.bold && !attr.italic => return true,
                 Some("Bold Italic") if attr.bold && attr.italic => return true,
@@ -36,11 +36,7 @@ fn font_info_matches(attr: &FontAttributes, names: &Names) -> bool {
             }
         }
     }
-    if attr.family == names.full_name && !attr.bold && !attr.italic {
-        true
-    } else {
-        false
-    }
+    attr.family == names.full_name && !attr.bold && !attr.italic
 }
 
 fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Result<()> {
@@ -65,31 +61,36 @@ fn load_built_in_fonts(font_info: &mut Vec<(Names, FontDataHandle)>) -> Result<(
         font!("../../../assets/fonts/siliguri/HindSiliguri-Bold.ttf"),
         font!("../../../assets/fonts/siliguri/HindSiliguri-Regular.ttf"),
     ] {
-        let face = ttf_parser::Face::from_slice(&data, 0)?;
+        let face = ttf_parser::Face::from_slice(data, 0)?;
         let full_name = face
             .names()
-            .find(|name| name.name_id() == ttf_parser::name_id::FULL_NAME)
+            .into_iter()
+            .find(|name| name.name_id == ttf_parser::name_id::FULL_NAME)
             .and_then(|name| name.to_string())
             .unwrap();
 
         let postscript_name = face
             .names()
-            .find(|name| name.name_id() == ttf_parser::name_id::POST_SCRIPT_NAME)
+            .into_iter()
+            .find(|name| name.name_id == ttf_parser::name_id::POST_SCRIPT_NAME)
             .and_then(|name| name.to_string());
 
         let unique = face
             .names()
-            .find(|name| name.name_id() == ttf_parser::name_id::UNIQUE_ID)
+            .into_iter()
+            .find(|name| name.name_id == ttf_parser::name_id::UNIQUE_ID)
             .and_then(|name| name.to_string());
 
         let sub_family = face
             .names()
-            .find(|name| name.name_id() == ttf_parser::name_id::SUBFAMILY)
+            .into_iter()
+            .find(|name| name.name_id == ttf_parser::name_id::SUBFAMILY)
             .and_then(|name| name.to_string());
 
         let family = face
             .names()
-            .find(|name| name.name_id() == ttf_parser::name_id::FAMILY)
+            .into_iter()
+            .find(|name| name.name_id == ttf_parser::name_id::FAMILY)
             .and_then(|name| name.to_string());
 
         let names = Names { full_name, unique, family, sub_family, postscript_name };

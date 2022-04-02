@@ -107,11 +107,11 @@ impl Image {
             let src_offset = y * stride;
             let dest_offset = y * width * 4;
             for x in 0..width {
-                let red = data[src_offset + (x * 4) + 0];
+                let red = data[src_offset + (x * 4)];
                 let green = data[src_offset + (x * 4) + 1];
                 let blue = data[src_offset + (x * 4) + 2];
                 let alpha = data[src_offset + (x * 4) + 3];
-                image.data[dest_offset + (x * 4) + 0] = blue;
+                image.data[dest_offset + (x * 4)] = blue;
                 image.data[dest_offset + (x * 4) + 1] = green;
                 image.data[dest_offset + (x * 4) + 2] = red;
                 image.data[dest_offset + (x * 4) + 3] = alpha;

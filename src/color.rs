@@ -49,7 +49,7 @@ impl RgbColor {
     }
 
     pub fn from_named_or_rgb_string(s: &str) -> Option<Self> {
-        RgbColor::from_rgb_str(&s).or_else(|| RgbColor::from_named(&s))
+        RgbColor::from_rgb_str(s).or_else(|| RgbColor::from_named(s))
     }
 }
 

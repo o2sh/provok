@@ -18,8 +18,6 @@ struct WordJson {
     bg_color: Option<String>,
     bold: Option<bool>,
     italic: Option<bool>,
-    underline: Option<bool>,
-    strikethrough: Option<bool>,
 }
 
 pub struct Input {
@@ -59,11 +57,8 @@ impl Input {
         let input_json = InputJson::parse(path)?;
         let mut words: Vec<Word> = Vec::new();
         for word_json in input_json.words.iter() {
-            let bg_color = if let Some(c) = &word_json.bg_color {
-                Some(RgbColor::from_named_or_rgb_string(c).unwrap())
-            } else {
-                None
-            };
+            let bg_color =
+                word_json.bg_color.as_ref().map(|c| RgbColor::from_named_or_rgb_string(c).unwrap());
             let mut buf = harfbuzz::Buffer::new()?;
             buf.add_str(&word_json.text);
             buf.guess_segment_properties();

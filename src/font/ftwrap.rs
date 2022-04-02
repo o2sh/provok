@@ -156,8 +156,7 @@ impl Library {
     }
 
     pub fn new_face(&self, handle: &FontDataHandle) -> Result<Face> {
-        let res = unsafe { self.new_memory_face(self.lib, handle) };
-        res
+        unsafe { self.new_memory_face(self.lib, handle) }
     }
     pub unsafe fn new_memory_face(
         &self,
