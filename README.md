@@ -2,7 +2,7 @@
 
 Text Renderer written in Rust using HarfBuzz for shaping, FreeType for rasterization and OpenGL for rendering.
 
-<h3 align="center"><img src="resources/provok.gif"></h3>
+<h3 align="center"><img src="resources/provok.gif" height="300px"></h3>
 
 ## Input
 
