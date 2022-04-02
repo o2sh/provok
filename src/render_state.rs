@@ -10,8 +10,6 @@ use glium::{IndexBuffer, VertexBuffer};
 
 const PADDING: f32 = 15.;
 
-const INNER_BG_ALPHA: f32 = 0.7;
-
 const ATLAS_SIZE: usize = 8192;
 
 static GLYPH_VERTEX_SHADER: &str =
@@ -19,17 +17,6 @@ static GLYPH_VERTEX_SHADER: &str =
 
 static GLYPH_FRAGMENT_SHADER: &str =
     include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/g_fragment.glsl"));
-
-static BG_VERTEX_SHADER: &str =
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_vertex.glsl"));
-
-static BG_FRAGMENT_SHADERS: [&str; 5] = [
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag0.glsl")),
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag1.glsl")),
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag2.glsl")),
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag3.glsl")),
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/shaders/bg_frags/frag4.glsl")),
-];
 
 pub const V_TOP_LEFT: usize = 0;
 pub const V_TOP_RIGHT: usize = 1;
@@ -48,33 +35,27 @@ implement_vertex!(Vertex, position, tex, fg_color, bg_color);
 
 pub struct RenderState {
     pub glyph_atlas: GlyphAtlas<SrgbTexture2d>,
-    pub bg_program: Program,
     pub glyph_program: Program,
     pub glyph_vertex_buffer: Option<VertexBuffer<Vertex>>,
     pub glyph_index_buffer: Option<IndexBuffer<u32>>,
     pub glyph_bg_vertex_buffer: Option<VertexBuffer<Vertex>>,
     pub glyph_bg_index_buffer: Option<IndexBuffer<u32>>,
-    pub inner_bg_vertex_buffer: Option<VertexBuffer<Vertex>>,
-    pub inner_bg_index_buffer: Option<IndexBuffer<u32>>,
     pub bg_vertex_buffer: Option<VertexBuffer<Vertex>>,
     pub bg_index_buffer: Option<IndexBuffer<u32>>,
     pub word: Option<Word>,
 }
 
 impl RenderState {
-    pub fn new(display: &Display, bg_fragment_shader_num: usize) -> Result<Self> {
-        let (glyph_program, bg_program) = compile_shaders(display, bg_fragment_shader_num)?;
+    pub fn new(display: &Display) -> Result<Self> {
+        let glyph_program = compile_shaders(display)?;
         let glyph_atlas = GlyphAtlas::new(display, ATLAS_SIZE)?;
         Ok(Self {
             glyph_atlas,
-            bg_program,
             glyph_program,
             glyph_vertex_buffer: None,
             glyph_index_buffer: None,
             glyph_bg_vertex_buffer: None,
             glyph_bg_index_buffer: None,
-            inner_bg_vertex_buffer: None,
-            inner_bg_index_buffer: None,
             bg_vertex_buffer: None,
             bg_index_buffer: None,
             word: None,
@@ -204,59 +185,22 @@ impl RenderState {
         Ok(())
     }
 
-    pub fn compute_inner_bg_vertices(
-        &mut self,
-        display: &Display,
-        window_width: f64,
-        window_height: f64,
-    ) -> Result<()> {
-        let canvas_color = self.word.as_ref().unwrap().canvas_color;
-        let mut bg_color = color::to_tuple_rgba(canvas_color);
-        bg_color.3 = INNER_BG_ALPHA;
-        let mut verts = Vec::new();
-        let mut indices = Vec::new();
-
-        let pad = 3. * PADDING;
-        let (w, h) = (window_width as f32 / 2., window_height as f32 / 2.);
-
-        let left = -w + pad;
-        let right = w - pad;
-        let top = -h + pad;
-        let bottom = h - pad;
-
-        verts.push(Vertex { position: (left, top), bg_color, ..Default::default() });
-        verts.push(Vertex { position: (right, top), bg_color, ..Default::default() });
-        verts.push(Vertex { position: (left, bottom), bg_color, ..Default::default() });
-        verts.push(Vertex { position: (right, bottom), bg_color, ..Default::default() });
-
-        indices.push(V_TOP_LEFT as u32);
-        indices.push(V_TOP_RIGHT as u32);
-        indices.push(V_BOT_LEFT as u32);
-
-        indices.push(V_TOP_RIGHT as u32);
-        indices.push(V_BOT_LEFT as u32);
-        indices.push(V_BOT_RIGHT as u32);
-
-        self.inner_bg_vertex_buffer = Some(VertexBuffer::dynamic(display, &verts)?);
-        self.inner_bg_index_buffer =
-            Some(IndexBuffer::new(display, glium::index::PrimitiveType::TrianglesList, &indices)?);
-        Ok(())
-    }
-
     pub fn compute_bg_vertices(
         &mut self,
         display: &Display,
         window_width: f64,
         window_height: f64,
     ) -> Result<()> {
+        let canvas_color = self.word.as_ref().unwrap().canvas_color;
+        let bg_color = color::to_tuple_rgba(canvas_color);
         let mut verts = Vec::new();
         let mut indices = Vec::new();
         let (w, h) = (window_width as f32 / 2., window_height as f32 / 2.);
 
-        verts.push(Vertex { position: (-w, -h), ..Default::default() });
-        verts.push(Vertex { position: (w, -h), ..Default::default() });
-        verts.push(Vertex { position: (-w, h), ..Default::default() });
-        verts.push(Vertex { position: (w, h), ..Default::default() });
+        verts.push(Vertex { position: (-w, -h), bg_color, ..Default::default() });
+        verts.push(Vertex { position: (w, -h), bg_color, ..Default::default() });
+        verts.push(Vertex { position: (-w, h), bg_color, ..Default::default() });
+        verts.push(Vertex { position: (w, h), bg_color, ..Default::default() });
 
         indices.push(V_TOP_LEFT as u32);
         indices.push(V_TOP_RIGHT as u32);
@@ -274,10 +218,7 @@ impl RenderState {
     }
 }
 
-fn compile_shaders(
-    display: &Display,
-    bg_fragment_shader_num: usize,
-) -> Result<(glium::Program, glium::Program)> {
+fn compile_shaders(display: &Display) -> Result<glium::Program> {
     let glyph_source = glium::program::ProgramCreationInput::SourceCode {
         vertex_shader: GLYPH_VERTEX_SHADER,
         fragment_shader: GLYPH_FRAGMENT_SHADER,
@@ -290,16 +231,5 @@ fn compile_shaders(
     };
     let glyph_program = glium::Program::new(display, glyph_source)?;
 
-    let bg_source = glium::program::ProgramCreationInput::SourceCode {
-        vertex_shader: BG_VERTEX_SHADER,
-        fragment_shader: BG_FRAGMENT_SHADERS[bg_fragment_shader_num],
-        outputs_srgb: true,
-        tessellation_control_shader: None,
-        tessellation_evaluation_shader: None,
-        transform_feedback_varyings: None,
-        uses_point_size: false,
-        geometry_shader: None,
-    };
-    let bg_program = glium::Program::new(display, bg_source)?;
-    Ok((glyph_program, bg_program))
+    Ok(glyph_program)
 }

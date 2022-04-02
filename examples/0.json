@@ -1,44 +1,41 @@
 {
-    "font_size": 45,
-    "words": [
-        {
-            "text": "\"PROVOK\"",
-            "canvas_color": "#E24E43",
-            "bg_color": "#EFB715",
-            "fg_color": "#E24E43",
-            "bold": true
-        },
-        {
-            "text": "الإستفزاز",
-            "canvas_color": "#72A7C8",
-            "fg_color": "#2D2425",
-            "bold": true
-        },
-        {
-            "text": "去挑衅",
-            "canvas_color": "#D53071",
-            "fg_color": "#008165",
-            "bg_color": "#E03427",
-            "bold": true
-        },
-        {
-            "text": "उकसाने के लिए",
-            "canvas_color": "#FFA141",
-            "fg_color": "#000060",
-            "bold": true
-        },
-        {
-            "text": "побуждение",
-            "canvas_color": "#F7EAB8",
-            "fg_color": "#F7EAB8",
-            "bg_color": "#CA332E",
-            "bold": true
-        },
-        {
-            "text": "เพื่อกระตุ้น",
-            "canvas_color": "#66C89B",
-            "fg_color": "#D4FDA2",
-            "bold": true
-        }
-    ]
+  "font_size": 70,
+  "words": [
+    {
+      "text": "\"PROVOK\"",
+      "canvas_color": "#000000",
+      "fg_color": "#FF0202",
+      "bold": true
+    },
+    {
+      "text": "الإستفزاز",
+      "canvas_color": "#000000",
+      "fg_color": "#00FF28",
+      "bold": true
+    },
+    {
+      "text": "去挑衅",
+      "canvas_color": "#000000",
+      "fg_color": "#000AFF",
+      "bold": true
+    },
+    {
+      "text": "उकसाने के लिए",
+      "canvas_color": "#000000",
+      "fg_color": "#FFFC02",
+      "bold": true
+    },
+    {
+      "text": "побуждение",
+      "canvas_color": "#000000",
+      "fg_color": "#02FFE1",
+      "bold": true
+    },
+    {
+      "text": "เพื่อกระตุ้น",
+      "canvas_color": "#000000",
+      "fg_color": "#CC00FF",
+      "bold": true
+    }
+  ]
 }
