@@ -187,7 +187,7 @@ fn main() -> Result<()> {
             Arg::new("frequency")
                 .short('f')
                 .long("frequency")
-                .default_value("8")
+                .default_value("6")
                 .help("frequency in frame per second.")
                 .takes_value(true)
                 .validator(|t| match t.parse::<u32>() {

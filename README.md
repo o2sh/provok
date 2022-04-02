@@ -41,8 +41,8 @@ You can also provide your own custom input file with the `--input` CLI flag:
 provok -i /path/to/input-file
 ```
 
-You can pick between multiple background effects using the `--fragment` CLI flag:
+You can specify the frequency (in frame per second) at which the word will appear sing the `--frequency` CLI flag:
 
 ```text
-provok -f NUM (0..4)
+provok -f 5 
 ```
