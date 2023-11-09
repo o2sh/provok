@@ -2,7 +2,7 @@
 
 Text Renderer written in Rust using HarfBuzz for shaping, FreeType for rasterization and OpenGL for rendering.
 
-<h3 align="center"><img src="resources/provok.gif" height="240px"></h3>
+<p align="center"><img src="resources/provok.gif" height="240px"></p>
 
 ## Input
 
@@ -30,7 +30,7 @@ First, you need to have installed the [Rust toolchain](https://www.rust-lang.org
 
 ```text
 git clone https://github.com/o2sh/provok --depth=1
-cd provok 
+cd provok
 make install
 provok
 ```
@@ -44,5 +44,5 @@ provok -i /path/to/input-file
 You can specify the frequency (in frame per second) at which the word will appear using the `--frequency` CLI flag:
 
 ```text
-provok -f 5 
+provok -f 5
 ```
