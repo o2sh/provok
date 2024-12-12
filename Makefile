@@ -5,7 +5,7 @@ install:
 	cargo install --path "."
 
 uninstall:
-	cargo uninstall onefetch
+	cargo uninstall provok
 
 clean:
 	cargo clean
